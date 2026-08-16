@@ -183,6 +183,22 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
 /* ---------- 세션 ---------- */
 #sessionScreen{justify-content:flex-start;padding-top:calc(26px + env(safe-area-inset-top));touch-action:none;}
 #touchField{position:fixed;inset:0;z-index:0;}
+.label{width:100%;max-width:330px;margin-top:26px;border:1px solid #4E5C67;border-radius:2px;
+  padding:20px 18px 18px;text-align:left;position:relative;}
+.label .lno{position:absolute;top:12px;right:16px;font-size:9.5px;letter-spacing:.22em;color:#86949D;}
+.label h4{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:27px;
+  letter-spacing:.12em;color:var(--paper);margin-bottom:3px;}
+.label .lsub{font-size:11.5px;letter-spacing:.2em;color:var(--brass);margin-bottom:16px;}
+.label dl{display:grid;grid-template-columns:74px 1fr;gap:0;}
+.label dt{font-size:10px;letter-spacing:.18em;color:#86949D;padding:8px 0;border-top:1px solid #232D35;}
+.label dd{font-size:12.5px;color:var(--paper);padding:8px 0;border-top:1px solid #232D35;line-height:1.5;}
+.label dt:first-of-type,.label dd:first-of-type{border-top:none;}
+.tings{width:100%;max-width:330px;margin-top:22px;text-align:left;}
+.tings .th{font-size:10.5px;letter-spacing:.22em;color:#86949D;text-transform:uppercase;margin-bottom:8px;}
+.trow{display:flex;gap:13px;padding:7px 0;border-bottom:1px solid #232D35;}
+.trow:last-child{border-bottom:none;}
+.trow .tt{font-size:11px;letter-spacing:.1em;color:var(--brass);min-width:42px;font-variant-numeric:tabular-nums;}
+.trow .tx{font-size:12.5px;color:var(--paper);line-height:1.5;}
 .hsum{font-size:12px;letter-spacing:.14em;color:var(--brass-soft);margin-bottom:16px;}
 .hlist{width:100%;max-width:330px;max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -355,7 +371,7 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
     <button class="theme rv" data-t="restore"><div class="tn">Restore</div><div class="tb">2 / 4</div></button>
   </div>
   <div class="lens rv" id="pro" style="margin-top:20px;">
-    <button class="len" data-p="tuning">A=440</button>
+    <button class="len sel" data-p="tuning">Just</button>
     <button class="len" data-p="binaural">🎧 Depth</button>
     <button class="len" data-p="field">Season</button>
   </div>
@@ -433,6 +449,8 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
   </div>
   <p id="delta" class="rv"></p>
   <p id="logline" class="rv"></p>
+  <div class="label rv" id="labelCard"></div>
+  <div class="tings rv" id="tings"></div>
   <p class="closing serif rv" id="closingLine">Where this resonance ends,<br>your day begins.</p>
   <button class="btn rv" id="againBtn">Start over</button>
 </div>
@@ -443,17 +461,26 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
 const S={
   screen:'welcome', colorIn:null, colorOut:null,
   theme:'calm', mins:10,
-  tuning:440, just:false, binaural:false, field:false, term:null, slots:{},
-  running:false, tEnd:0, tStart:0, miniPhase:-1, closing:false, rang:false
+  tuning:440, just:true, binaural:false, field:false, term:null, slots:{},
+  running:false, tEnd:0, tStart:0, miniPhase:-1, closing:false, rang:false, notes:[], firstTouch:false
 };
 /* 바이노럴 — 테마별 뇌파 대역 (Meditation Builder 사양: 델타 0.5~4 / 세타 4~8 / 알파 8~14Hz · 헤드폰 전제) */
 const BINAURAL={calm:{band:'Theta',beat:6},pause:{band:'Delta',beat:3},flow:{band:'Alpha',beat:10},sleep:{band:'Delta',beat:2},focus:{band:'Alpha',beat:12},restore:{band:'Theta',beat:5}};
 /* 프로그램 아크의 축소판 — 스미기(도입) → 울리기(연주) → 받기(배스) */
 const MINI_ARC=[
-  {frac:0.00, ko:'스미기', drone:0.7},
-  {frac:0.18, ko:'울리기', drone:1.0},
-  {frac:0.72, ko:'받기',   drone:1.25}
+  {frac:0.00, ko:'스미기', en:'The sound settles in', drone:0.7},
+  {frac:0.18, ko:'울리기', en:'It opens and rings',   drone:1.0},
+  {frac:0.72, ko:'받기',   en:'It takes you in',      drone:1.25}
 ];
+/* 청음첩 — 귀가 머문 자리를 시각과 함께 남긴다 */
+function note(txt){
+  if(!S.running)return;
+  const t=Math.max(0,ctx().currentTime-S.tStart);
+  if(S.notes.length>60)return;
+  S.notes.push({t:Math.round(t),txt});
+}
+function mmss(sec){const m=Math.floor(sec/60),x=Math.floor(sec%60);
+  return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0');}
 const THEMES={
   /* breath — Meditation Builder 카탈로그: deep 4·6 / longout 4·8 / coherent 5·5(0.1Hz) / equal 4·4 / relax 2·4 */
   calm:   {breath:[['in',4],['out',6]], root:0, pulse:0},
@@ -504,9 +531,18 @@ function f2m(m){
   const d=m-63, oct=Math.floor(d/12), i=((d%12)+12)%12;
   return HWANG*YUL[i]*Math.pow(2,oct);
 }
-/* 화음용 — 순정 모드에서도 음높이 중심은 같이 쓰되 3도는 평균율로 눌러 둔다 */
-function f2mT(m){
-  return S.just ? 450*Math.pow(2,(m-69)/12) : S.tuning*Math.pow(2,(m-69)/12);
+/* 화음도 같은 12율 자리에서 온다. 3도는 81/64 라 5:4 보다 21.5센트 높지만,
+   패드만 다른 격자에 두면 드론·멜로디·베이스와 최대 21.5센트씩 어긋난다.
+   층간 어긋남이 화음 안 맥놀이보다 훨씬 크게 들리므로 격자를 하나로 통일한다.
+   화음의 근음에서 완전5도만 3/2 로 직접 잡는다. 열두 율 중 중려 한 자리에서만
+   5도가 사슬 밖으로 나가 -23.5센트 늑대가 되는데(변율의 자리), 그 한 곳만 바로잡는다. */
+function f2mT(m,rootMidi){
+  if(!S.just)return S.tuning*Math.pow(2,(m-69)/12);
+  if(rootMidi!=null){
+    const d=m-rootMidi, i=((d%12)+12)%12;
+    if(i===7)return f2m(rootMidi)*1.5*Math.pow(2,Math.floor(d/12));
+  }
+  return f2m(m);
 }
 function yulName(m){return YUL_NAME[(((m-63)%12)+12)%12];}
 function ctx(){
@@ -816,15 +852,25 @@ function startSustain(c){
   } else {
     /* 핸드팬·띵샤 — 홀드 260ms 후 잔잔한 롤 */
     /* 구르기 — 넓게 시작해 조여든다. 등간격 반복은 기계처럼 들린다 */
-    const ROLLMS={handpan:[170,120],moktak:[260,105],tingsha:[130,95],marimba:[150,95],kalimba:[160,110],chime:[200,140],gong:[900,700]};
-    const rng=ROLLMS[c.inst]||[180,120];
-    let ms=rng[0];
+    /* 구르기 — [처음 간격, 가장 좁은 간격, 매 타마다 곱하는 비율].
+       목탁은 딱 딱 딱 하고 떨어지다 다다다로 붙고 라라라라로 이어져야 하므로
+       간격을 300ms 에서 55ms 까지 0.86배씩 조여 열두 타 만에 굴러가게 만든다.
+       조여들수록 한 타의 세기는 줄고 흔들림도 함께 줄어든다. 촘촘해질수록 고르게 들린다. */
+    const ROLLMS={moktak:[300,55,0.86],handpan:[170,110,0.93],tingsha:[130,95,0.95],
+                  marimba:[150,85,0.90],kalimba:[160,105,0.93],chime:[200,140,0.96],gong:[900,650,0.94]};
+    const rng=ROLLMS[c.inst]||[180,110,0.92];
+    const [ms0,msMin,ratio]=rng;
+    let ms=ms0;
     h.rollIv=setTimeout(function tick(){
       if(h.dead)return;
-      (VOICE[c.inst]||tingsha)(ac.currentTime+0.003,h.cur,0.16+Math.random()*0.08,c.dist,c.tone);
-      ms=Math.max(rng[1],ms*0.9);
-      h.rollIv=setTimeout(tick,ms*(0.94+Math.random()*0.12));
-    },260);
+      const tight=(ms0-ms)/Math.max(1,ms0-msMin);        /* 0 이면 성글고 1 이면 최고로 촘촘 */
+      const vel=0.46-0.26*tight;
+      const jit=0.16*(1-tight);
+      (VOICE[c.inst]||tingsha)(ac.currentTime+0.003,h.cur,
+        vel*(1+(Math.random()-0.5)*jit*2),c.dist,c.tone);
+      ms=Math.max(msMin,ms*ratio);
+      h.rollIv=setTimeout(tick,ms*(1+(Math.random()-0.5)*jit));
+    },ms0);
   }
   h.rub=(speed,pressure)=>{
     if(h.dead||!cont)return;
@@ -1585,7 +1631,7 @@ function hBass(t,midi,dur,vel){
     o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+0.05);
   });
 }
-function hPluck(t,midi,v){
+function hPluck(t,midi,v,rootM){
   const ac=ctx(),g=M.g.melG;
   const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=6;
   lp.frequency.setValueAtTime(2600,t);lp.frequency.exponentialRampToValueAtTime(420,t+0.32);
@@ -1595,16 +1641,16 @@ function hPluck(t,midi,v){
   lp.connect(a);a.connect(g);
   [[-6,0.4],[6,0.4],[1200,0.12]].forEach(([dt,lv],k)=>{
     const o=ac.createOscillator(),og=ac.createGain();
-    o.type='sawtooth';o.frequency.value=f2m(midi+(k===2?12:0));o.detune.value=k===2?0:dt;
+    o.type='sawtooth';o.frequency.value=f2mT(midi+(k===2?12:0),rootM);o.detune.value=k===2?0:dt;
     og.gain.value=lv;o.connect(og);og.connect(lp);o.start(t);o.stop(t+0.6);
   });
 }
-function hRhodes(t,midis,v){
+function hRhodes(t,midis,v,rootM){
   const ac=ctx(),g=M.g.melG;
   midis.forEach(m=>{
     const o=ac.createOscillator(),h=ac.createOscillator(),a=ac.createGain(),ha=ac.createGain();
-    o.type='sine';o.frequency.value=f2mT(m);
-    h.type='sine';h.frequency.value=f2mT(m)*2.01;ha.gain.value=0.18;
+    o.type='sine';o.frequency.value=f2mT(m,rootM);
+    h.type='sine';h.frequency.value=f2mT(m,rootM)*2.01;ha.gain.value=0.18;
     a.gain.setValueAtTime(0.0001,t);a.gain.exponentialRampToValueAtTime(0.026*v,t+0.012);
     a.gain.exponentialRampToValueAtTime(0.0001,t+1.3);
     o.connect(a);h.connect(ha);ha.connect(a);a.connect(g);
@@ -1673,7 +1719,7 @@ function hRevCym(t,dur){
   a.gain.setValueAtTime(0.0001,t+dur);
   n.connect(hp);hp.connect(a);a.connect(g);n.start(t);n.stop(t+dur+0.02);
 }
-function hPad(t,midis,dur){
+function hPad(t,midis,dur,rootM){
   const ac=ctx(),g=M.g.melG;
   const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1800;lp.Q.value=0.4;
   const a=ac.createGain();
@@ -1682,7 +1728,7 @@ function hPad(t,midis,dur){
   lp.connect(a);a.connect(g);
   midis.forEach((m,k)=>{
     const o=ac.createOscillator(),og=ac.createGain();
-    o.type=k%2?'triangle':'sawtooth';o.frequency.value=f2mT(m);o.detune.value=k%2?4:-4;
+    o.type=k%2?'triangle':'sawtooth';o.frequency.value=f2mT(m,rootM);o.detune.value=k%2?4:-4;
     og.gain.value=k%2?0.16:0.1;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+0.1);
   });
 }
@@ -1723,7 +1769,7 @@ function rollTrack(keepTempo){
 function scheduleStep(step,t){
   const spb=60/M.bpm, s16=spb/4;
   /* 폼을 한 바퀴 다 돌면 Outro 끝에서 새 곡을 뽑는다. 45분을 같은 4코드로 버티지 않게 */
-  if(step>0&&step%(musicBars()*16)===0){rollTrack(false);}
+  if(step>0&&step%(musicBars()*16)===0){rollTrack(false);note('The set turns over. '+HOUSE_GENRE[M.gid].name+', '+M.bpm+' bpm.');}
   const bar=Math.floor(step/16)%musicBars(), st=step%16;
   const si=sectionAt(bar);
   const sec=SECT[si.name]||SECT.Drop;
@@ -1808,13 +1854,13 @@ function scheduleStep(step,t){
         while(m>MEL_HI)m-=12;while(m<MEL_LO)m+=12;
         M.melLast=m;
         const pv=0.62+(sec.lead>=1?0.22:0.08);
-        hPluck(t,m,pv);
+        hPluck(t,m,pv,60+M.tonic+tones[0]);
         if(M.mel)wbump(t,barForMidi(m),0.55+pv*0.35,3);
       }
     } else if([2,10].includes(st)&&Math.random()<sec.lead+0.2){
       const ms=leadVoices(tones.slice(0,4).map(iv=>M.tonic+iv),M.rhoPrev,52,76);
       M.rhoPrev=ms;
-      hRhodes(t,ms,0.8);
+      hRhodes(t,ms,0.8,60+M.tonic+tones[0]);
       if(M.mel)ms.forEach(m=>wbump(t,barForMidi(m),0.5,3));
     }
   }
@@ -1831,7 +1877,7 @@ function scheduleStep(step,t){
   if(sec.pad&&st===0){
     const ms=leadVoices(tones.slice(0,3).map(iv=>M.tonic+iv),M.padPrev,55,79);
     M.padPrev=ms;
-    hPad(t,ms,spb*4*0.98);
+    hPad(t,ms,spb*4*0.98,60+M.tonic+tones[0]);
     if(M.mel)ms.forEach(m=>wbump(t,barForMidi(m),0.2,6));
   }
 }
@@ -1910,6 +1956,7 @@ function musicStart(){
     droneAmp.gain.setValueAtTime(Math.max(droneAmp.gain.value,0.0001),t);
     droneAmp.gain.linearRampToValueAtTime(0.16*0.55,t+6);}
   $('mwave').classList.add('live');
+  note('The music comes in. '+HOUSE_GENRE[M.gid].name+', '+M.bpm+' bpm.');
   if(!waveRAF)waveRAF=requestAnimationFrame(drawWave);
 }
 function musicStop(){
@@ -2116,6 +2163,7 @@ function fieldTouch(x,y,pressure){
   if(!S.running)return;
   const {inst,midi,vel,dist,tone}=calcTouch(x,y,pressure);
   const ac=ctx();
+  if(!S.firstTouch){S.firstTouch=true;note('First touch. '+INSTS[inst].name+'.');}
   (VOICE[inst]||bowl)(ac.currentTime+0.003,midi,vel,dist,tone);
   ripples.push({x:x*devicePixelRatio,y:y*devicePixelRatio,t0:performance.now(),v:vel,d:dist});
   startRipples();
@@ -2260,6 +2308,11 @@ function startSession(){
   tingsha3(ac.currentTime+0.2);
   droneAmp=startDrone(root,th.pulse);
   if(S.field)fieldStart();
+  /* 청음첩은 한 지점에 몰리면 목록이 아니라 덩어리가 된다. 시각을 흩어 놓는다 */
+  setTimeout(()=>note('One breath of quiet. The body goes still first.'),400);
+  if(S.field)setTimeout(()=>{const t=S.term||currentTerm();
+    note(t[0]+' '+t[1]+'. You are hearing '+t[5]+'.');},14000);
+  if(S.just)setTimeout(()=>note('Just intonation. Hwangjong at 318.2 Hz, the fifths locked.'),30000);
   /* 전문 라벨 — 튜닝 · 뇌파 대역 */
   $('remain').textContent=fmt(S.mins*60);
   drawQuadLabels();
@@ -2270,7 +2323,7 @@ function startSession(){
   startRipples();
   wakeAcquire();
   tiltHook();
-  S.miniPhase=-1;
+  S.miniPhase=-1;S.notes=[];S.firstTouch=false;
   remainIv=setInterval(()=>{
     const ac2=ctx();
     const rem=S.tEnd-ac2.currentTime;
@@ -2290,8 +2343,9 @@ function startSession(){
         droneAmp.gain.linearRampToValueAtTime(0.16*p.drone,t+8);
       }
       if(ph>0)tingsha(ac2.currentTime+0.1,88,0.4);
+      note(MINI_ARC[ph].en+'.');
     }
-    if(rem<=26&&!S.closing){S.closing=true;stopDrone(20);fieldStop(20);}
+    if(rem<=26&&!S.closing){S.closing=true;stopDrone(20);fieldStop(20);note('The drone begins to withdraw.');}
     if(rem<=6&&!S.rang){S.rang=true;tingsha3(ac2.currentTime+0.1);}
     if(rem<=0)finishSession();
   },500);
@@ -2410,6 +2464,41 @@ function wireWaves(wrapId,cb){
   });
 }
 wireWaves('wavesIn',c=>{S.colorIn=c;setTimeout(()=>go('choose'),650);});
+function drawLabel(){
+  const el=$('labelCard'), tl=$('tings');
+  const all=readLog();
+  const t=S.term||currentTerm();
+  const d=new Date();
+  const two=x=>String(x).padStart(2,'0');
+  const when=d.getFullYear()+'.'+two(d.getMonth()+1)+'.'+two(d.getDate())+', '+two(d.getHours())+':'+two(d.getMinutes());
+  const insts=['tl','tr','bl','br'].map(k=>INSTS[S.slots[k]].name).join(', ');
+  const tune=S.just?'Just intonation, Hwangjong 318.2 Hz':('Equal temperament, A='+S.tuning);
+  el.innerHTML=
+    '<span class="lno">'+d.getFullYear()+' / '+String(all.length).padStart(3,'0')+'</span>'+
+    '<h4>'+t[1]+'</h4>'+
+    '<p class="lsub">'+t[0]+' &nbsp;&nbsp; '+t[5]+'</p>'+
+    '<dl>'+
+    '<dt>TERM</dt><dd>'+t[0]+' '+t[1]+(S.field?'':', ambience off')+'</dd>'+
+    '<dt>WHEN</dt><dd>'+when+'</dd>'+
+    '<dt>BREATH</dt><dd>'+(S.theme[0].toUpperCase()+S.theme.slice(1))+', '+
+      THEMES[S.theme].breath.map(b=>b[1]).join(' / ')+' seconds</dd>'+
+    '<dt>TUNING</dt><dd>'+tune+'</dd>'+
+    '<dt>FIELD</dt><dd>'+insts+'</dd>'+
+    '<dt>LENGTH</dt><dd>'+S.mins+' minutes</dd>'+
+    '</dl>';
+  /* 일곱 줄만 보인다. 앞쪽만 잘라 내면 세션 후반이 통째로 사라지므로 고르게 뽑는다 */
+  let ns=S.notes;
+  if(ns.length>7){
+    const pick=[0];
+    for(let i=1;i<6;i++)pick.push(Math.round(i*(ns.length-1)/6));
+    pick.push(ns.length-1);
+    ns=[...new Set(pick)].map(i=>ns[i]);
+  }
+  tl.innerHTML = ns.length
+    ? '<p class="th">Listening notes</p>'+ns.map(x=>
+        '<div class="trow"><span class="tt">'+mmss(x.t)+'</span><span class="tx">'+x.txt+'</span></div>').join('')
+    : '';
+}
 wireWaves('wavesOut',c=>{
   S.colorOut=c;
   const all=writeLog({d:Date.now(),theme:S.theme,mins:S.mins,
@@ -2421,6 +2510,7 @@ wireWaves('wavesOut',c=>{
     ? 'Your first record is kept'
     : 'Session '+total+' of yours, '+settled+' ended calmer, '+hrs.toFixed(1)+' hours in all';
   refreshHistBtn();
+  drawLabel();
   let msg;
   if(RANK[c]>RANK[S.colorIn])msg=`From ${WAVE_EN[S.colorIn]} to ${WAVE_EN[c]}.<br>The water settled. Not the sound,<br>but your own nervous system did this.`;
   else if(c===S.colorIn)msg=`Still ${WAVE_EN[c]}, and that is alright.<br>Watching the water was the meditation.`;
@@ -2487,12 +2577,13 @@ $('lens').querySelectorAll('.len').forEach(b=>{
 function proHint(){
   const p=[];
   if(S.tuning===432)p.push('A=432, a touch lower and rounder');
-  if(S.just)p.push('Just intonation. Twelve pitches stacked from pure 3:2 fifths, Hwangjong at 318.2 Hz. Fifths and fourths stop beating.');
+  if(S.just)p.push('Just intonation. Twelve pitches from stacked 3:2 fifths, Hwangjong at 318.2 Hz.');
   if(S.field){const t=S.term||currentTerm();p.push(t[0]+' '+t[1]+', the solar term today. You will hear '+t[5]+'.');}
   if(S.binaural)p.push('Binaural, with headphones a deeper layer forms beneath the breath');
 
   $('proHint').innerHTML=p.join('<br>');
 }
+/* 기본은 순정률. 버튼은 Just → A=440 → A=432 를 돈다 */
 $('pro').querySelectorAll('.len').forEach(b=>{
   b.onclick=()=>{
     if(b.dataset.p==='tuning'){
@@ -2515,6 +2606,7 @@ $('pro').querySelectorAll('.len').forEach(b=>{
     proHint();
   };
 });
+proHint();   /* 기본 상태의 안내를 처음부터 띄운다 */
 /* ================= 사분면 악기 =================
    화면을 넷으로 나눠 각 자리에 악기를 붙인다. 눌러서 다음 악기로 넘긴다. */
 function loadSlots(){
@@ -2606,7 +2698,7 @@ $('openBtn').onclick=startSession;
 $('againBtn').onclick=()=>{
   S.colorIn=null;S.colorOut=null;
   document.querySelectorAll('.wave').forEach(x=>x.classList.remove('sel'));
-  $('delta').textContent='';$('logline').textContent='';
+  $('delta').textContent='';$('logline').textContent='';$('labelCard').innerHTML='';$('tings').innerHTML='';
   go('welcome');
 };
 </script>
