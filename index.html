@@ -3,9 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SUM WAVE — My Session</title>
+<meta name="theme-color" content="#141B22">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="A sound meditation you play with your hands. Choose a breath, open a session, and touch the field.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SUM WAVE">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SUM WAVE">
+<meta property="og:description" content="A sound meditation you play with your hands.">
+<title>SUM WAVE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --ink:#141B22; --slate:#1E2830; --paper:#F2EEE6; --dim:#9AA5AB;
@@ -15,6 +25,7 @@
   --red:#C96A5C; --yellow:#C9A15C; --green:#7FA98C;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
 html,body{height:100%;overscroll-behavior:none;}
 body{
   background:var(--ink);color:var(--paper);
@@ -23,12 +34,18 @@ body{
   display:flex;flex-direction:column;
   user-select:none;-webkit-user-select:none;
 }
-.serif{font-family:'Gowun Batang','Noto Serif KR',serif;}
+/* 서체는 두 벌만 쓴다.
+   디스플레이 세리프(Cormorant Garamond)는 20px 이상에만, 그 아래는 전부 시스템 산세리프.
+   Cormorant 는 획이 가늘어 작은 크기로 어두운 배경에 올리면 읽히지 않는다. */
+.serif{font-family:'Cormorant Garamond','Noto Serif KR',Georgia,serif;font-weight:500;}
 /* ---------- 화면 전환 ---------- */
 .screen{
   position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   padding:32px 28px calc(32px + env(safe-area-inset-bottom));text-align:center;
-  opacity:0;pointer-events:none;transition:opacity 1.1s ease;
+  opacity:0;pointer-events:none;visibility:hidden;
+  /* 페이드가 끝난 뒤에 visibility 를 끈다. 안 그러면 사라지는 장면이 안 보인다.
+     visibility:hidden 이라야 탭 순서와 스크린리더에서 함께 빠진다. */
+  transition:opacity 1.1s ease, visibility 0s linear 1.1s;
   overflow-y:auto;overflow-x:hidden;
 }
 /* 자동 마진으로 가운데를 잡는다. justify-content:center 는 넘칠 때 위아래를 동시에 잘라
@@ -36,8 +53,8 @@ body{
 .screen::before{content:'';margin-top:auto;flex-shrink:0;}
 .screen::after{content:'';margin-bottom:auto;flex-shrink:0;}
 .screen>*{flex-shrink:0;}
-.screen.on{opacity:1;pointer-events:auto;}
-@media (prefers-reduced-motion: reduce){.screen{transition:none;}}
+.screen.on{opacity:1;pointer-events:auto;visibility:visible;transition:opacity 1.1s ease, visibility 0s;}
+@media (prefers-reduced-motion: reduce){.screen{transition:visibility 0s linear 1.1s;}.screen.on{transition:visibility 0s;}}
 /* ---------- 스태거 리빌 — 글자들이 순서대로 떠오른다 ---------- */
 .rv{
   opacity:0;transform:translate3d(0,10px,0);filter:blur(9px);
@@ -81,7 +98,7 @@ body{
 /* ---------- 공통 ---------- */
 .eyebrow{font-size:11.5px;letter-spacing:.34em;color:var(--brass);text-transform:uppercase;margin-bottom:14px;}
 h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
-.wordmark{font-family:'Cormorant Garamond',Georgia,serif;font-size:42px;font-weight:500;letter-spacing:.3em;margin-left:.3em;}
+.wordmark{font-family:'Cormorant Garamond',Georgia,serif;font-size:42px;font-weight:600;letter-spacing:.3em;margin-left:.3em;}
 .lead{color:var(--dim);font-size:15.5px;margin-top:14px;max-width:300px;}
 .btn{
   margin-top:38px;background:none;border:1.5px solid rgba(201,161,92,.75);color:var(--brass);
@@ -91,7 +108,7 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
 .btn:active{background:var(--brass);color:var(--ink);}
 .btn:focus-visible{outline:2px solid var(--paper);outline-offset:3px;}
 .btn.ghost{border-color:#566470;color:var(--dim);font-size:13.5px;padding:13px 26px;margin-top:16px;}
-.q{font-size:24px;line-height:1.55;max-width:300px;}
+.q{font-size:26px;line-height:1.5;max-width:310px;}
 /* ---------- 배경 오라 — 느리게 숨쉬는 빛 ---------- */
 .aura{position:fixed;inset:-20%;z-index:-1;pointer-events:none;filter:blur(90px);opacity:.5;}
 .aura i{position:absolute;border-radius:50%;display:block;}
@@ -128,7 +145,7 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
   transition:stroke .4s;
 }
 .wave .rippond circle{fill:#7E8B95;transition:fill .4s;}
-.wave span{font-size:14.5px;color:var(--paper);letter-spacing:.1em;font-family:'Gowun Batang',serif;}
+.wave span{font-size:14px;color:var(--paper);letter-spacing:.16em;font-weight:500;}
 .wave em{font-style:normal;font-size:11px;color:var(--dim);letter-spacing:.08em;}
 /* 고른 것은 어디서나 같은 모습이다 */
 .wave.sel,.theme.sel,.len.sel,.slot.sel{
@@ -151,8 +168,8 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
 
 .theme:focus-visible{outline:2px solid var(--paper);outline-offset:2px;}
 .theme{text-align:center;align-items:center;}
-.theme .tn{font-family:'Cormorant Garamond',Georgia,serif;font-size:23px;font-weight:500;letter-spacing:.14em;}
-.theme .tb{font-size:11.5px;letter-spacing:.4em;color:var(--dim);margin-top:5px;font-variant-numeric:tabular-nums;margin-left:.4em;}
+.theme .tn{font-family:'Cormorant Garamond',Georgia,serif;font-size:23px;font-weight:600;letter-spacing:.14em;}
+.theme .tb{font-size:11.5px;letter-spacing:.4em;color:var(--dim);margin-top:5px;font-variant-numeric:tabular-nums;margin-left:.4em;white-space:nowrap;}
 .lens{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap;justify-content:center;max-width:330px;}
 #chooseScreen{justify-content:flex-start;overflow-y:auto;padding-top:calc(48px + env(safe-area-inset-top));}
 #chooseScreen .btn{margin-top:22px;margin-bottom:12px;flex-shrink:0;}
@@ -221,6 +238,8 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
   pointer-events:none;display:flex;align-items:center;gap:15px;
   margin-bottom:8px;padding:0 4px;
 }
+/* 남은 대화형 요소의 키보드 포커스 */
+.mt:focus-visible,#endBtn:focus-visible{outline:2px solid var(--paper);outline-offset:3px;}
 .mt{
   pointer-events:none;background:none;border:none;font-family:'Cormorant Garamond',Georgia,serif;
   font-size:14px;letter-spacing:.26em;color:rgba(154,165,171,.34);
@@ -262,11 +281,12 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
 #breathRings .br{fill:none;stroke:var(--brass);stroke-width:1;}
 /* ---------- 체크아웃 ---------- */
 #delta{font-size:19px;line-height:1.75;max-width:310px;}
-.closing{font-size:15px;color:var(--brass);margin-top:26px;letter-spacing:.03em;line-height:1.8;}
+.closing{font-size:15px;color:var(--brass);margin-top:26px;letter-spacing:.05em;line-height:1.85;font-family:inherit;font-weight:400;}
 </style>
 </head>
 <body>
 <div class="aura"><i class="a1"></i><i class="a2"></i></div>
+<p class="sr" id="srann" aria-live="polite" role="status"></p>
 
 <!-- 1. 웰컴 -->
 <div class="screen on" id="welcomeScreen">
@@ -299,7 +319,7 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
   </div>
   <div class="eyebrow rv">Sound Oasis · Sound Meditation</div>
   <h1 class="wordmark rv">SUM WAVE</h1>
-  <p id="enterHint" class="rv">Press it slowly..</p>
+  <p id="enterHint" class="rv">Hold to begin</p>
   <button class="btn ghost rv" id="histBtn" style="display:none;">Records</button>
 </div>
 
@@ -327,16 +347,17 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
 <div class="screen" id="chooseScreen">
   <div class="eyebrow rv">Choose your current</div>
   <div class="themes" id="themes">
-    <button class="theme rv" data-t="calm"><div class="tn">Calm</div><div class="tb">4 · 6</div></button>
-    <button class="theme rv" data-t="pause"><div class="tn">Pause</div><div class="tb">4 · 8</div></button>
-    <button class="theme rv" data-t="flow"><div class="tn">Align</div><div class="tb">5 · 5</div></button>
-    <button class="theme rv" data-t="sleep"><div class="tn">Sleep</div><div class="tb">4 · 8</div></button>
-    <button class="theme rv" data-t="focus"><div class="tn">Focus</div><div class="tb">4 · 4</div></button>
-    <button class="theme rv" data-t="restore"><div class="tn">Restore</div><div class="tb">2 · 4</div></button>
+    <button class="theme rv" data-t="calm"><div class="tn">Calm</div><div class="tb">4 / 6</div></button>
+    <button class="theme rv" data-t="pause"><div class="tn">Pause</div><div class="tb">4 / 8</div></button>
+    <button class="theme rv" data-t="flow"><div class="tn">Align</div><div class="tb">5 / 5</div></button>
+    <button class="theme rv" data-t="sleep"><div class="tn">Sleep</div><div class="tb">4 / 8</div></button>
+    <button class="theme rv" data-t="focus"><div class="tn">Focus</div><div class="tb">4 / 4</div></button>
+    <button class="theme rv" data-t="restore"><div class="tn">Restore</div><div class="tb">2 / 4</div></button>
   </div>
   <div class="lens rv" id="pro" style="margin-top:20px;">
-    <button class="len" data-p="tuning">A=432</button>
+    <button class="len" data-p="tuning">A=440</button>
     <button class="len" data-p="binaural">🎧 Depth</button>
+    <button class="len" data-p="field">Season</button>
   </div>
   <p class="lead rv" id="proHint" style="margin-top:10px;font-size:12.5px;min-height:16px;"></p>
   <button class="btn ghost rv" id="fieldBtn">The field</button>
@@ -349,7 +370,7 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
     <button class="len" data-m="45">45 min</button>
     <button class="len" data-m="60">60 min</button>
   </div>
-  <button class="btn" id="openBtn">Open Session</button>
+  <button class="btn" id="openBtn">Open session</button>
 </div>
 
 <!-- 4. 세션 -->
@@ -390,7 +411,7 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
   <p class="lead rv">Four corners, four instruments.<br>Tap a corner to change it.</p>
   <div class="slots rv" id="slots"></div>
   <p class="lead rv" style="font-size:12.5px;margin-top:14px;">Up and down sets pitch, left and right sets tone.</p>
-  <button class="btn ghost rv" id="fieldBack">Done</button>
+  <button class="btn ghost rv" id="fieldBack">Back</button>
 </div>
 
 <!-- 7. 기록 -->
@@ -422,7 +443,7 @@ h1{font-size:44px;font-weight:700;letter-spacing:.04em;line-height:1.25;}
 const S={
   screen:'welcome', colorIn:null, colorOut:null,
   theme:'calm', mins:10,
-  tuning:440, binaural:false, slots:{},
+  tuning:440, just:false, binaural:false, field:false, term:null, slots:{},
   running:false, tEnd:0, tStart:0, miniPhase:-1, closing:false, rang:false
 };
 /* 바이노럴 — 테마별 뇌파 대역 (Meditation Builder 사양: 델타 0.5~4 / 세타 4~8 / 알파 8~14Hz · 헤드폰 전제) */
@@ -452,7 +473,7 @@ const INSTS={
   marimba:{name:'Marimba', lo:55, hi:79},
   bowl:   {name:'Bowl',    lo:55, hi:74},
   pad:    {name:'Pad',     lo:48, hi:62},
-  moktak: {name:'Moktak',  lo:46, hi:60},
+  moktak: {name:'Moktak',  lo:55, hi:69},
   cello:  {name:'Cello',   lo:38, hi:52},
   gong:   {name:'Gong',    lo:31, hi:45}
 };
@@ -466,7 +487,28 @@ const $=id=>document.getElementById(id);
 
 /* ================= 오디오 엔진 (미니) ================= */
 let AC=null, master=null, reverb=null, wet=null, dry=null, pulseG=null, limiter=null;
-const f2m=m=>S.tuning*Math.pow(2,(m-69)/12);
+/* ---------- 삼분손익 12율 ----------
+   황종에서 2:3(완전5도 위)과 3:4(완전4도 아래)를 번갈아 열한 번 쌓아 얻는 정수비.
+   열두 율이 전부 3^k/2^m 꼴이라 5도와 4도와 옥타브에서 배음이 정확히 포개진다.
+   황종 318.198Hz = 450 / 2^(1/2). A=450 기준의 E♭ 자리이므로 MIDI 63 에 건다.
+   주의: 3도는 이 계열에 없다. 장3도 81/64 는 순정 5:4 보다 +21.5센트 높아
+   지속되는 화음에서 거칠게 맥놀이한다. 그래서 하우스 레이어의 패드와 로즈만
+   같은 기준음의 평균율(f2mT)로 따로 빼 둔다. 단선율과 명상 악기는 전부 순정률로 간다. */
+const HWANG=450/Math.SQRT2;
+const YUL=[1, 2187/2048, 9/8, 19683/16384, 81/64, 177147/131072,
+           729/512, 3/2, 6561/4096, 27/16, 59049/32768, 243/128];
+const YUL_NAME=['Hwangjong','Daeryeo','Taeju','Hyeopjong','Goseon','Jungryeo',
+                'Yubin','Imjong','Ichik','Namryeo','Muyeok','Eungjong'];
+function f2m(m){
+  if(!S.just)return S.tuning*Math.pow(2,(m-69)/12);
+  const d=m-63, oct=Math.floor(d/12), i=((d%12)+12)%12;
+  return HWANG*YUL[i]*Math.pow(2,oct);
+}
+/* 화음용 — 순정 모드에서도 음높이 중심은 같이 쓰되 3도는 평균율로 눌러 둔다 */
+function f2mT(m){
+  return S.just ? 450*Math.pow(2,(m-69)/12) : S.tuning*Math.pow(2,(m-69)/12);
+}
+function yulName(m){return YUL_NAME[(((m-63)%12)+12)%12];}
 function ctx(){
   if(AC)return AC;
   AC=new (window.AudioContext||window.webkitAudioContext)();
@@ -985,51 +1027,327 @@ function chime(t,midi,v,dist,tone){
 /* 목탁 — 속이 빈 나무통을 나무 채로 친 소리.
    세 겹으로 만든다.
    (1) 채가 닿는 순간의 딱 소리. 대역을 1500Hz 부근으로 내려 고역을 죽였다
-   (2) 통의 판 진동. 배음이 아니라 어긋난 비율(1 / 1.58 / 2.36 / 3.41)이 나무를 만든다.
-       타격 직후 4.5% 피치 하강이 특유의 "톡"을 낸다
+   (2) 통의 판 진동. 2배(옥타브)를 축으로 세우고 어긋난 비율(1.58 / 2.36 / 3.41)을 곁들인다.
+       옥타브가 있어야 음높이가 하나로 읽히고, 어긋난 비율이 나무 성질을 준다.
+       타격 직후 3% 피치 하강을 25ms에 걸어 "톡"을 짧고 또렷하게 만든다
    (3) 통 안 공기. 기음 아래 옥타브 부근을 좁게 때린다
    큰 목탁을 상정해 기음 감쇠를 0.70초로 늘리고 잔향 전송도 올렸다.
    고역 부분음은 낮추고 로우패스를 3200Hz로 내려 통이 울리는 쪽에 무게를 뒀다 */
 function moktak(t,midi,v,dist,tone){
   const ac=ctx(),f=f2m(midi),tn=tone==null?0.5:tone;
   const vv=Math.max(0.2,Math.min(1,v||0.5));
-  const out=noteOut(vv*0.95, dist==null?0.22:dist*0.55, 0.6);
+  /* 잔향은 3할만. 울림은 방이 아니라 통이 내야 또렷하다 */
+  const out=noteOut(vv*1.25, dist==null?0.22:dist*0.55, 0.32);
   const fm=ac.createBiquadFilter();fm.type='peaking';
-  fm.frequency.value=f*1.9;fm.Q.value=0.9;fm.gain.value=3.5;
-  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400+tn*1800;lp.Q.value=0.5;
+  fm.frequency.value=f*2.6;fm.Q.value=0.9;fm.gain.value=3;
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3100+tn*2000;lp.Q.value=0.5;
   fm.connect(lp);lp.connect(out);
   /* (1) 채 */
   const n=ac.createBufferSource();n.buffer=noiseBuf();
   const bp=ac.createBiquadFilter();bp.type='bandpass';
   /* 채의 단단함 — 왼쪽은 무른 채, 오른쪽은 단단한 채 */
-  bp.frequency.value=1300+tn*1400+Math.random()*500;bp.Q.value=0.6;
+  bp.frequency.value=880+tn*950+Math.random()*350;bp.Q.value=0.5;
   const ng=ac.createGain();
   ng.gain.setValueAtTime(0.0001,t);
-  ng.gain.exponentialRampToValueAtTime((0.10+tn*0.16)*vv,t+0.0015);
-  ng.gain.exponentialRampToValueAtTime(0.0001,t+0.045);
-  n.connect(bp);bp.connect(ng);ng.connect(fm);n.start(t,noiseAt());n.stop(t+0.05);
+  ng.gain.exponentialRampToValueAtTime((0.38+tn*0.26)*vv,t+0.0012);
+  ng.gain.exponentialRampToValueAtTime(0.0001,t+0.016);
+  n.connect(bp);bp.connect(ng);ng.connect(fm);n.start(t,noiseAt());n.stop(t+0.03);
+  /* 점 — 3ms 짜리 아주 짧은 고역 한 방울. 소리를 밝게 만들지 않으면서 윤곽만 세운다 */
+  const tk=ac.createBufferSource();tk.buffer=noiseBuf();
+  const tb=ac.createBiquadFilter();tb.type='highpass';tb.frequency.value=4200;
+  const tg=ac.createGain();
+  tg.gain.setValueAtTime(0.0001,t);
+  tg.gain.exponentialRampToValueAtTime(0.055*vv,t+0.0008);
+  tg.gain.exponentialRampToValueAtTime(0.0001,t+0.004);
+  tk.connect(tb);tb.connect(tg);tg.connect(out);tk.start(t,noiseAt());tk.stop(t+0.012);
   /* (2) 판 모드 */
-  [[1,0.62,0.70],[1.58,0.17*(0.6+tn*0.8),0.34],[2.36,0.07*(0.4+tn*1.2),0.16],[3.41,0.028*(0.3+tn*1.4),0.08]].forEach(([r,a,dec],k)=>{
+  [[1,0.78,0.62],[2.0,0.15*(0.7+tn*0.6),0.26],[1.58,0.055*(0.6+tn*0.8),0.20],[2.36,0.035*(0.4+tn*1.2),0.11],[3.41,0.016*(0.3+tn*1.4),0.055]].forEach(([r,a,dec],k)=>{
     const o=ac.createOscillator(),g=ac.createGain();
     o.type=k?'sine':'triangle';
-    o.frequency.setValueAtTime(f*r*1.045,t);
-    o.frequency.exponentialRampToValueAtTime(f*r,t+0.045);
+    o.frequency.setValueAtTime(f*r*1.03,t);
+    o.frequency.exponentialRampToValueAtTime(f*r,t+0.025);
     g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(a*0.5*vv,t+0.002);
+    g.gain.exponentialRampToValueAtTime(a*0.5*vv,t+0.0015);
     g.gain.exponentialRampToValueAtTime(0.0001,t+dec);
     o.connect(g);g.connect(fm);o.start(t);o.stop(t+dec+0.05);
   });
   /* (3) 통 안의 공기 */
   const cb=ac.createBufferSource();cb.buffer=noiseBuf();
   const cl=ac.createBiquadFilter();cl.type='bandpass';
-  cl.frequency.value=f*0.5;cl.Q.value=1.9;
+  /* 통 안 공기 — 짧고 얕게. 길게 울리면 어택을 덮어 소리가 뭉개진다 */
+  cl.frequency.value=f*0.75;cl.Q.value=1.4;
   const cg=ac.createGain();
   cg.gain.setValueAtTime(0.0001,t);
-  cg.gain.exponentialRampToValueAtTime(0.12*vv,t+0.005);
-  cg.gain.exponentialRampToValueAtTime(0.0001,t+0.26);
-  cb.connect(cl);cl.connect(cg);cg.connect(fm);cb.start(t,noiseAt());cb.stop(t+0.3);
+  cg.gain.exponentialRampToValueAtTime(0.09*vv,t+0.003);
+  cg.gain.exponentialRampToValueAtTime(0.0001,t+0.09);
+  cb.connect(cl);cl.connect(cg);cg.connect(fm);cb.start(t,noiseAt());cb.stop(t+0.12);
 }
 
+
+
+/* ================= 자연채음 — 24절기 =================
+   녹음 없이 만든다. 재료는 셋뿐이다.
+   (1) 바닥 — 대역을 좁힌 노이즈에 아주 느린 요동을 얹은 지속음. 비, 계곡, 바람, 불의 바닥
+   (2) 알갱이 — 짧은 노이즈 파열. 물방울, 낙엽, 자갈, 눈, 불티
+   (3) 목소리 — 활공하거나 진폭 변조된 음. 개구리, 풀벌레, 매미, 새
+   날짜에서 절기를 뽑아 그 절기의 소리가 자동으로 걸린다. */
+const TERMS=[
+ ['Ipchun','立春',2,4,   ['dripSlow'],              'first thaw, water falling', 2.65],
+ ['Usu','雨水',2,19,     ['rainLight'],             'fine rain', 0.79],
+ ['Gyeongchip','驚蟄',3,6,['frogs','paddy'],        'frogs', 1.2],
+ ['Chunbun','春分',3,21, ['birds','airDawn'],       'birdsong at daybreak', 1.03],
+ ['Cheongmyeong','淸明',4,5,['stream'],             'a valley stream', 0.57],
+ ['Gogu','穀雨',4,20,    ['rainHeavy'],             'spring downpour', 0.56],
+ ['Ipha','立夏',5,6,     ['windReed'],              'wind through the reeds', 1.0],
+ ['Soman','小滿',5,21,   ['wavesCalm'],             'calm surf', 1.12],
+ ['Mangjong','芒種',6,6, ['frogs','paddy'],         'a flooded paddy, frogs', 1.2],
+ ['Haji','夏至',6,21,    ['cicada'],                'cicadas', 1.12],
+ ['Soseo','小暑',7,7,    ['rainShower'],            'a passing shower', 0.89],
+ ['Daeseo','大暑',7,23,  ['rainHeavy'],             'heavy rain', 0.56],
+ ['Ipchu','立秋',8,8,    ['thunderFar','airNight'], 'distant thunder', 1.24],
+ ['Cheoseo','處暑',8,23, ['crickets','airNight'],   'crickets, the first chorus', 1.64],
+ ['Baekro','白露',9,8,   ['dripFast'],              'dew falling', 2.5],
+ ['Chubun','秋分',9,23,  ['wavesRough'],            'rough surf', 0.58],
+ ['Hanro','寒露',10,8,   ['windStrong'],            'hard wind', 1.07],
+ ['Sanggang','霜降',10,23,['leaves'],               'fallen leaves', 1.14],
+ ['Ipdong','立冬',11,7,  ['waterfall'],             'a waterfall, before the water drops', 0.55],
+ ['Soseol','小雪',11,22, ['gravel','wavesCalm'],    'gravel underfoot on the shore', 1.66],
+ ['Daeseol','大雪',12,7, ['snow'],                  'walking on new snow', 1.88],
+ ['Dongji','冬至',12,22, ['fire','airNight'],       'a fire on the longest night', 1.19],
+ ['Sohan','小寒',1,6,    ['draft'],                 'the quiet indoors, wind at the paper door', 2.09],
+ ['Daehan','大寒',1,20,  ['snow'],                  'walking on snow', 1.8]
+];
+function currentTerm(d){
+  d=d||new Date();
+  const md=(d.getMonth()+1)*100+d.getDate();
+  let best=TERMS[TERMS.length-1], bestKey=-1e9;
+  TERMS.forEach(t=>{
+    let k=t[2]*100+t[3];
+    if(k>md)k-=1300;                 /* 아직 안 온 절기는 작년 쪽으로 민다 */
+    if(k>bestKey){bestKey=k;best=t;}
+  });
+  return best;
+}
+const FGEN={
+  rainLight: {bed:[[2600,0.5,0.022,19,500]], grain:{n:[9,18],f:[2000,5200],q:7,dec:0.035,lvl:0.020}},
+  rainHeavy: {bed:[[1500,0.4,0.055,13,700]], grain:{n:[22,42],f:[1400,4200],q:5,dec:0.05,lvl:0.026}},
+  rainShower:{bed:[[2000,0.45,0.036,9,900]], grain:{n:[16,34],f:[1700,4800],q:6,dec:0.04,lvl:0.024}},
+  stream:    {bed:[[1100,0.35,0.045,17,420],[3200,0.8,0.016,11,900]], grain:{n:[5,12],f:[900,2600],q:9,dec:0.09,lvl:0.016}},
+  waterfall: {bed:[[800,0.3,0.075,29,300],[4000,0.5,0.020,7,1200]]},
+  windReed:  {bed:[[600,0.7,0.040,13,380],[2400,1.6,0.012,5,1100]]},
+  windStrong:{bed:[[420,0.6,0.070,7,320],[1800,1.2,0.022,3.5,900]]},
+  draft:     {bed:[[1600,9,0.014,6,240],[300,0.5,0.010,23,90]]},
+  airDawn:   {bed:[[500,0.3,0.010,31,140]]},
+  airNight:  {bed:[[360,0.3,0.012,37,110]]},
+  paddy:     {bed:[[700,0.5,0.018,21,200]]},
+  fire:      {bed:[[280,0.4,0.020,17,90]], grain:{n:[4,11],f:[1200,5000],q:3,dec:0.03,lvl:0.035}},
+  wavesCalm: {swell:{cyc:[7,11],f:900,q:0.4,lvl:0.055,rise:2.4}},
+  wavesRough:{swell:{cyc:[4,7],f:1400,q:0.35,lvl:0.095,rise:1.1}},
+  dripSlow:  {grain:{n:[0.5,1.6],f:[700,2200],q:14,dec:0.20,drop:0.5,lvl:0.10}},
+  dripFast:  {grain:{n:[1.6,4],f:[900,2800],q:15,dec:0.16,drop:0.45,lvl:0.085}},
+  leaves:    {grain:{n:[2,6],f:[1400,4200],q:2.2,dec:0.10,burst:[2,5],lvl:0.045}},
+  gravel:    {grain:{n:[0.7,1.6],f:[700,2600],q:1.8,dec:0.08,burst:[3,7],lvl:0.055}},
+  snow:      {grain:{n:[0.6,1.2],f:[500,1800],q:1.2,dec:0.13,burst:[2,4],lvl:0.050}},
+  frogs:     {voice:{n:[0.8,2.2],kind:'croak'}},
+  crickets:  {voice:{n:[3,7],kind:'chirp'}},
+  cicada:    {voice:{n:[0.25,0.6],kind:'cicada'}},
+  birds:     {voice:{n:[0.6,1.6],kind:'bird'}},
+  thunderFar:{boom:{n:[0.05,0.12]}}
+};
+let fieldG=null, fieldNodes=[], fieldTimers=[];
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function fpush(x){fieldNodes.push(x);}
+function ftime(fn,ms){const iv=setTimeout(fn,ms);fieldTimers.push(iv);return iv;}
+/* 바닥 — 대역 노이즈에 두 겹의 느린 요동 */
+function fBed(f,q,lvl,cyc,dep){
+  const ac=ctx(),t=ac.currentTime;
+  const src=ac.createBufferSource();src.buffer=noiseBufLong();src.loop=true;
+  const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f;bp.Q.value=q;
+  const g=ac.createGain();g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(lvl,t+9);
+  slowLFOF(ac,t,1/cyc,dep,bp.frequency);
+  slowLFOF(ac,t,1/(cyc*1.7),lvl*0.35,g.gain);
+  src.connect(bp);bp.connect(g);g.connect(fieldG);
+  src.start(t,Math.random()*7);
+  fpush(src);
+}
+function slowLFOF(ac,t,hz,depth,target){
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type='sine';o.frequency.value=hz;g.gain.value=depth;
+  o.connect(g);g.connect(target);o.start(t);fpush(o);
+}
+/* 알갱이 — 짧은 노이즈 파열. drop 이 있으면 음높이가 떨어진다(물방울) */
+function fGrain(cfg){
+  const ac=ctx();
+  const one=(at)=>{
+    const src=ac.createBufferSource();src.buffer=noiseBuf();
+    const bp=ac.createBiquadFilter();bp.type='bandpass';
+    const f=rnd(cfg.f[0],cfg.f[1]);
+    bp.frequency.setValueAtTime(f,at);
+    if(cfg.drop)bp.frequency.exponentialRampToValueAtTime(f*(1-cfg.drop),at+cfg.dec);
+    bp.Q.value=cfg.q;
+    const g=ac.createGain();
+    g.gain.setValueAtTime(0.0001,at);
+    g.gain.exponentialRampToValueAtTime(cfg.lvl*rnd(0.5,1.3),at+0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001,at+cfg.dec);
+    src.connect(bp);bp.connect(g);g.connect(fieldG);
+    src.start(at,noiseAt());src.stop(at+cfg.dec+0.05);
+  };
+  const tick=()=>{
+    const now=ctx().currentTime;
+    if(cfg.burst){                       /* 발소리처럼 몇 알갱이가 뭉쳐 온다 */
+      const k=Math.round(rnd(cfg.burst[0],cfg.burst[1]));
+      for(let i=0;i<k;i++)one(now+0.01+i*rnd(0.012,0.05));
+    } else one(now+0.01);
+    ftime(tick,1000/rnd(cfg.n[0],cfg.n[1]));
+  };
+  ftime(tick,rnd(200,1400));
+}
+/* 파도 — 느리게 차올랐다 빠지는 노이즈 */
+function fSwell(cfg){
+  const ac=ctx();
+  const tick=()=>{
+    const at=ctx().currentTime+0.02, dur=rnd(cfg.cyc[0],cfg.cyc[1]);
+    const src=ac.createBufferSource();src.buffer=noiseBufLong();
+    const lp=ac.createBiquadFilter();lp.type='lowpass';
+    lp.frequency.setValueAtTime(cfg.f*0.55,at);
+    lp.frequency.linearRampToValueAtTime(cfg.f*1.5,at+cfg.rise);
+    lp.frequency.linearRampToValueAtTime(cfg.f*0.5,at+dur);
+    lp.Q.value=cfg.q;
+    const g=ac.createGain();
+    g.gain.setValueAtTime(0.0001,at);
+    g.gain.exponentialRampToValueAtTime(cfg.lvl*rnd(0.7,1.25),at+cfg.rise);
+    g.gain.exponentialRampToValueAtTime(0.0001,at+dur);
+    src.connect(lp);lp.connect(g);g.connect(fieldG);
+    src.start(at,Math.random()*6);src.stop(at+dur+0.2);
+    ftime(tick,(dur*rnd(0.42,0.58))*1000);
+  };
+  tick();
+}
+/* 목소리 — 생물 */
+function fVoice(kind){
+  const ac=ctx();
+  const croak=(at)=>{
+    const k=Math.round(rnd(2,5));
+    for(let i=0;i<k;i++){
+      const tt=at+i*rnd(0.13,0.24), dur=rnd(0.09,0.16);
+      const src=ac.createBufferSource();src.buffer=noiseBuf();
+      const bp=ac.createBiquadFilter();bp.type='bandpass';
+      bp.frequency.value=rnd(360,760);bp.Q.value=7;
+      const am=ac.createGain();am.gain.value=0.5;
+      const lfo=ac.createOscillator(),ld=ac.createGain();
+      lfo.type='square';lfo.frequency.value=rnd(28,58);ld.gain.value=0.5;
+      lfo.connect(ld);ld.connect(am.gain);lfo.start(tt);lfo.stop(tt+dur+0.05);
+      const g=ac.createGain();
+      g.gain.setValueAtTime(0.0001,tt);
+      g.gain.exponentialRampToValueAtTime(0.055,tt+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,tt+dur);
+      src.connect(bp);bp.connect(am);am.connect(g);g.connect(fieldG);
+      src.start(tt,noiseAt());src.stop(tt+dur+0.05);
+    }
+  };
+  const chirp=(at)=>{
+    const k=Math.round(rnd(3,8)), f=rnd(4200,5600);
+    for(let i=0;i<k;i++){
+      const tt=at+i*0.028;
+      const src=ac.createBufferSource();src.buffer=noiseBuf();
+      const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f;bp.Q.value=22;
+      const g=ac.createGain();
+      g.gain.setValueAtTime(0.0001,tt);
+      g.gain.exponentialRampToValueAtTime(0.030,tt+0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001,tt+0.020);
+      src.connect(bp);bp.connect(g);g.connect(fieldG);
+      src.start(tt,noiseAt());src.stop(tt+0.03);
+    }
+  };
+  const cicada=(at)=>{
+    const dur=rnd(2.5,6);
+    const src=ac.createBufferSource();src.buffer=noiseBufLong();
+    const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=rnd(4200,6200);bp.Q.value=4;
+    const am=ac.createGain();am.gain.value=0.45;
+    const lfo=ac.createOscillator(),ld=ac.createGain();
+    lfo.type='sine';lfo.frequency.value=rnd(42,78);ld.gain.value=0.45;
+    lfo.connect(ld);ld.connect(am.gain);lfo.start(at);lfo.stop(at+dur+0.1);
+    const g=ac.createGain();
+    g.gain.setValueAtTime(0.0001,at);
+    g.gain.exponentialRampToValueAtTime(0.028,at+dur*0.25);
+    g.gain.setValueAtTime(0.028,at+dur*0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001,at+dur);
+    src.connect(bp);bp.connect(am);am.connect(g);g.connect(fieldG);
+    src.start(at,Math.random()*6);src.stop(at+dur+0.1);
+  };
+  const bird=(at)=>{
+    const k=Math.round(rnd(2,5));
+    for(let i=0;i<k;i++){
+      const tt=at+i*rnd(0.09,0.22), dur=rnd(0.06,0.13);
+      const o=ac.createOscillator(),g=ac.createGain();
+      const f0=rnd(2200,4200), f1=f0*rnd(0.62,1.7);
+      o.type='sine';
+      o.frequency.setValueAtTime(f0,tt);
+      o.frequency.exponentialRampToValueAtTime(f1,tt+dur);
+      g.gain.setValueAtTime(0.0001,tt);
+      g.gain.exponentialRampToValueAtTime(0.026,tt+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,tt+dur);
+      o.connect(g);g.connect(fieldG);o.start(tt);o.stop(tt+dur+0.03);
+    }
+  };
+  const V={croak,chirp,cicada,bird};
+  const cfg=FGEN[kind==='croak'?'frogs':kind==='chirp'?'crickets':kind==='cicada'?'cicada':'birds'].voice;
+  const tick=()=>{V[kind](ctx().currentTime+0.02);ftime(tick,1000/rnd(cfg.n[0],cfg.n[1]));};
+  ftime(tick,rnd(400,2600));
+}
+/* 먼 천둥 — 아주 가끔, 길게 */
+function fBoom(cfg){
+  const ac=ctx();
+  const tick=()=>{
+    const at=ctx().currentTime+0.02, dur=rnd(3.5,7);
+    const src=ac.createBufferSource();src.buffer=noiseBufLong();
+    const lp=ac.createBiquadFilter();lp.type='lowpass';
+    lp.frequency.setValueAtTime(rnd(180,320),at);
+    lp.frequency.exponentialRampToValueAtTime(70,at+dur);
+    lp.Q.value=0.6;
+    const g=ac.createGain();
+    g.gain.setValueAtTime(0.0001,at);
+    g.gain.exponentialRampToValueAtTime(rnd(0.05,0.10),at+rnd(0.4,1.2));
+    g.gain.exponentialRampToValueAtTime(0.0001,at+dur);
+    src.connect(lp);lp.connect(g);g.connect(fieldG);
+    src.start(at,Math.random()*6);src.stop(at+dur+0.2);
+    ftime(tick,1000/rnd(cfg.n[0],cfg.n[1]));
+  };
+  ftime(tick,rnd(3000,9000));
+}
+function fieldStart(){
+  const ac=ctx(),t=ac.currentTime;
+  const term0=S.term||currentTerm();
+  /* 절기마다 소리의 성질이 달라 자연 레벨이 18배까지 벌어진다.
+     실측 RMS 로 뽑은 보정을 곱해 드론보다 약 14dB 아래에 나란히 세운다. */
+  fieldG=ac.createGain();fieldG.gain.setValueAtTime(0.0001,t);
+  fieldG.gain.exponentialRampToValueAtTime(4.0*(term0[6]||1),t+10);
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;lp.Q.value=0.4;
+  const send=ac.createGain();send.gain.value=0.22;
+  fieldG.connect(lp);lp.connect(dry);lp.connect(send);send.connect(reverb);
+  const term=term0;
+  term[4].forEach(k=>{
+    const c=FGEN[k];if(!c)return;
+    (c.bed||[]).forEach(([f,q,lvl,cyc,dep])=>fBed(f,q,lvl,cyc,dep));
+    if(c.grain)fGrain(c.grain);
+    if(c.swell)fSwell(c.swell);
+    if(c.voice)fVoice(c.voice.kind);
+    if(c.boom)fBoom(c.boom);
+  });
+}
+function fieldStop(fade){
+  fieldTimers.forEach(iv=>clearTimeout(iv));fieldTimers=[];
+  if(fieldG){
+    const t=ctx().currentTime;
+    fieldG.gain.cancelScheduledValues(t);
+    fieldG.gain.setValueAtTime(Math.max(fieldG.gain.value,0.0001),t);
+    fieldG.gain.exponentialRampToValueAtTime(0.0001,t+fade);
+  }
+  const nodes=fieldNodes;fieldNodes=[];
+  setTimeout(()=>{nodes.forEach(x=>{try{if(x.stop)x.stop();}catch(e){}try{x.disconnect();}catch(e){}});},fade*1000+300);
+  fieldG=null;
+}
 
 /* ================= House Layer — Beat Maker 이식 (Melodic House / Deep House) =================
    드럼 그리드·코드 진행·모드·템포·DJ 폼·사이드체인 뎁스를 원본 사양 그대로.
@@ -1285,8 +1603,8 @@ function hRhodes(t,midis,v){
   const ac=ctx(),g=M.g.melG;
   midis.forEach(m=>{
     const o=ac.createOscillator(),h=ac.createOscillator(),a=ac.createGain(),ha=ac.createGain();
-    o.type='sine';o.frequency.value=f2m(m);
-    h.type='sine';h.frequency.value=f2m(m)*2.01;ha.gain.value=0.18;
+    o.type='sine';o.frequency.value=f2mT(m);
+    h.type='sine';h.frequency.value=f2mT(m)*2.01;ha.gain.value=0.18;
     a.gain.setValueAtTime(0.0001,t);a.gain.exponentialRampToValueAtTime(0.026*v,t+0.012);
     a.gain.exponentialRampToValueAtTime(0.0001,t+1.3);
     o.connect(a);h.connect(ha);ha.connect(a);a.connect(g);
@@ -1364,7 +1682,7 @@ function hPad(t,midis,dur){
   lp.connect(a);a.connect(g);
   midis.forEach((m,k)=>{
     const o=ac.createOscillator(),og=ac.createGain();
-    o.type=k%2?'triangle':'sawtooth';o.frequency.value=f2m(m);o.detune.value=k%2?4:-4;
+    o.type=k%2?'triangle':'sawtooth';o.frequency.value=f2mT(m);o.detune.value=k%2?4:-4;
     og.gain.value=k%2?0.16:0.1;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+0.1);
   });
 }
@@ -1670,11 +1988,19 @@ function orbHueLoop(){
   orbRAF=requestAnimationFrame(orbHueLoop);
 }
 /* ================= 화면 전환 ================= */
+const SCREEN_NAME={welcome:'Welcome',checkin:'Check in',choose:'Choose your session',
+  session:'Session in progress',field:'The field',history:'Records',checkout:'Check out'};
 function go(name){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  /* inert 로 확실히 잘라 둔다. visibility 만으로는 브라우저가 순차 포커스 시작점을
+     꺼진 화면 안에 남겨 두는 경우가 있다. */
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('on');s.inert=true;});
   const scr=$(name+'Screen');
-  scr.classList.add('on');
+  scr.classList.add('on');scr.inert=false;
+  if(document.activeElement&&document.activeElement!==document.body&&
+     !scr.contains(document.activeElement)){try{document.activeElement.blur();}catch(e){}}
   S.screen=name;
+  const an=$('srann');
+  if(an)an.textContent=SCREEN_NAME[name]||name;
   if(name==='checkin'||name==='checkout'){REDUCED_W?animPond():pondStart();}
   /* 글자들이 순서대로 떠오른다 */
   const els=scr.querySelectorAll('.rv');
@@ -1933,6 +2259,7 @@ function startSession(){
   S.tEnd=S.tStart+S.mins*60;
   tingsha3(ac.currentTime+0.2);
   droneAmp=startDrone(root,th.pulse);
+  if(S.field)fieldStart();
   /* 전문 라벨 — 튜닝 · 뇌파 대역 */
   $('remain').textContent=fmt(S.mins*60);
   drawQuadLabels();
@@ -1964,7 +2291,7 @@ function startSession(){
       }
       if(ph>0)tingsha(ac2.currentTime+0.1,88,0.4);
     }
-    if(rem<=26&&!S.closing){S.closing=true;stopDrone(20);}
+    if(rem<=26&&!S.closing){S.closing=true;stopDrone(20);fieldStop(20);}
     if(rem<=6&&!S.rang){S.rang=true;tingsha3(ac2.currentTime+0.1);}
     if(rem<=0)finishSession();
   },500);
@@ -1973,7 +2300,7 @@ function finishSession(){
   if(!S.running)return;
   S.running=false;S.closing=false;S.rang=false;
   clearInterval(remainIv);remainIv=null;
-  wakeRelease();
+  wakeRelease();fieldStop(3);
   if(breathRAF){cancelAnimationFrame(breathRAF);breathRAF=null;}
   if(orbRAF){cancelAnimationFrame(orbRAF);orbRAF=null;}
   touches.forEach(h=>h.sus.release());touches.clear();
@@ -2086,7 +2413,7 @@ wireWaves('wavesIn',c=>{S.colorIn=c;setTimeout(()=>go('choose'),650);});
 wireWaves('wavesOut',c=>{
   S.colorOut=c;
   const all=writeLog({d:Date.now(),theme:S.theme,mins:S.mins,
-    inW:S.colorIn,outW:c,tuning:S.tuning,bin:S.binaural,slots:Object.assign({},S.slots)});
+    inW:S.colorIn,outW:c,tuning:S.just?'just':S.tuning,bin:S.binaural,slots:Object.assign({},S.slots)});
   const settled=all.filter(e=>RANK[e.outW]>RANK[e.inW]).length;
   const total=all.length;
   const hrs=all.reduce((a,e)=>a+(e.mins||0),0)/60;
@@ -2095,8 +2422,8 @@ wireWaves('wavesOut',c=>{
     : 'Session '+total+' of yours, '+settled+' ended calmer, '+hrs.toFixed(1)+' hours in all';
   refreshHistBtn();
   let msg;
-  if(RANK[c]>RANK[S.colorIn])msg=`From ${WAVE_EN[S.colorIn]} to ${WAVE_EN[c]} — the water settled.<br>Not the sound, but your own<br>nervous system did this.`;
-  else if(c===S.colorIn)msg=`Still ${WAVE_EN[c]}, and that is alright.<br>Watching the water — that was the meditation.`;
+  if(RANK[c]>RANK[S.colorIn])msg=`From ${WAVE_EN[S.colorIn]} to ${WAVE_EN[c]}.<br>The water settled. Not the sound,<br>but your own nervous system did this.`;
+  else if(c===S.colorIn)msg=`Still ${WAVE_EN[c]}, and that is alright.<br>Watching the water was the meditation.`;
   else msg=`Honest water is good water.<br>Noticing is where stillness begins.`;
   $('delta').innerHTML=msg;
 });
@@ -2114,7 +2441,7 @@ function drawHistory(){
   const list=$('hlist');
   list.innerHTML='';
   if(!all.length){
-    list.innerHTML='<p class="hempty">No sessions kept yet</p>';
+    list.innerHTML='<p class="hempty">Nothing kept yet.<br>Finish a session and it will appear here.</p>';
     $('hsum').textContent='';
     return;
   }
@@ -2160,6 +2487,8 @@ $('lens').querySelectorAll('.len').forEach(b=>{
 function proHint(){
   const p=[];
   if(S.tuning===432)p.push('A=432, a touch lower and rounder');
+  if(S.just)p.push('Just intonation. Twelve pitches stacked from pure 3:2 fifths, Hwangjong at 318.2 Hz. Fifths and fourths stop beating.');
+  if(S.field){const t=S.term||currentTerm();p.push(t[0]+' '+t[1]+', the solar term today. You will hear '+t[5]+'.');}
   if(S.binaural)p.push('Binaural, with headphones a deeper layer forms beneath the breath');
 
   $('proHint').innerHTML=p.join('<br>');
@@ -2167,12 +2496,21 @@ function proHint(){
 $('pro').querySelectorAll('.len').forEach(b=>{
   b.onclick=()=>{
     if(b.dataset.p==='tuning'){
-      S.tuning=S.tuning===440?432:440;
-      b.classList.toggle('sel',S.tuning===432);
-      b.textContent=S.tuning===432?'A=432 ✓':'A=432';
+      /* A=440 → A=432 → 순정률(황종 318.2) 세 자리를 돈다 */
+      if(!S.just&&S.tuning===440){S.tuning=432;}
+      else if(!S.just&&S.tuning===432){S.just=true;S.tuning=440;}
+      else {S.just=false;S.tuning=440;}
+      b.classList.toggle('sel',S.just||S.tuning===432);
+      b.textContent=S.just?'Just':(S.tuning===432?'A=432':'A=440');
     } else if(b.dataset.p==='binaural'){
       S.binaural=!S.binaural;
       b.classList.toggle('sel',S.binaural);
+    } else if(b.dataset.p==='field'){
+      S.field=!S.field;
+      if(S.field&&!S.term)S.term=currentTerm();
+      b.classList.toggle('sel',S.field);
+      b.textContent=S.field?S.term[0]:'Season';
+      if(S.running){S.field?fieldStart():fieldStop(3);}
     }
     proHint();
   };
@@ -2221,6 +2559,7 @@ function drawSlots(){
   });
 }
 loadSlots();drawSlots();
+document.querySelectorAll('.screen').forEach(s=>{s.inert=!s.classList.contains('on');});
 
 /* 지그시 눌러 입장 — 링이 차오르면 열린다 */
 const ENTER_MS=1100, RING_LEN=590.6;
@@ -2251,8 +2590,8 @@ function enterUp(){
   $('enterRing').style.strokeDashoffset=String(RING_LEN);
   $('enterRingGlow').style.strokeDashoffset=String(RING_LEN);
   $('enterHint').classList.add('wake');
-  $('enterHint').textContent='A little longer —';
-  setTimeout(()=>{$('enterHint').classList.remove('wake');$('enterHint').textContent='Press it slowly..';},1600);
+  $('enterHint').textContent='A little longer';
+  setTimeout(()=>{$('enterHint').classList.remove('wake');$('enterHint').textContent='Hold to begin';},1600);
 }
 /* 첫 화면도 떠오르며 시작 */
 (()=>{const els=document.querySelectorAll('#welcomeScreen .rv');
