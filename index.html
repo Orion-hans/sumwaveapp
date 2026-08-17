@@ -1401,6 +1401,37 @@ function fieldStop(fade){
 const HOUSE_GRID={kick:[0,4,8,12],clap:[4,12],hat:[2,6,10,14],ohat:[6,14],perc:[7,15]};
 const GRID_TECHNO={kick:[0,4,8,12],clap:[12],hat:[2,6,10,14],ohat:[14],perc:[3,7,11,15]};
 const GRID_DOWN={kick:[0,7,10],clap:[4,12],hat:[2,6,10,14],ohat:[6],perc:[5,13]};
+const GRID_2STEP={kick:[0,10],clap:[4,12],hat:[2,3,6,7,11,14,15],ohat:[6],perc:[5,9,13]};
+const GRID_DUB={kick:[0,4,8,12],clap:[],hat:[2,6,10,14],ohat:[],perc:[]};
+const GRID_NONE={kick:[],clap:[],hat:[],ohat:[],perc:[]};
+/* 피아노 독주 — 타악과 패드를 전부 비우고 lead 강도만 남긴다.
+   섹션이 바뀌면 왼손 음형의 밀도와 오른손 프레이즈 길이가 달라진다. */
+const SECT_PIANO={
+  Intro: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:0,lead:0.35},
+  Verse: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:0,lead:0.6},
+  Build: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:0,lead:0.8},
+  Drop:  {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:0,lead:1},
+  Break: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:0,lead:0.45},
+  Outro: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:0,lead:0.25}
+};
+/* 비트 없는 구성 — 모든 섹션에서 타악을 지운다. 패드와 리드만 남는다 */
+const SECT_DRIFT={
+  Intro: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0},
+  Verse: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0.35},
+  Build: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0.5},
+  Drop:  {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0.7},
+  Break: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0.3},
+  Outro: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0}
+};
+/* 덥 — Break 에서도 스탭과 딜레이만 남기고 전부 비운다 */
+const SECT_DUB={
+  Intro: {kick:1,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0.3},
+  Verse: {kick:1,clap:0,hat:1,ohat:0,perc:0,bass:1,pad:1,lead:0.7},
+  Build: {kick:1,clap:0,hat:1,ohat:0,perc:0,bass:1,pad:1,lead:0.9},
+  Drop:  {kick:1,clap:0,hat:1,ohat:0,perc:0,bass:1,pad:1,lead:1},
+  Break: {kick:0,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0.8},
+  Outro: {kick:1,clap:0,hat:0,ohat:0,perc:0,bass:0,pad:1,lead:0.4}
+};
 const HOUSE_PROG={
   melodichouse:[
     ['i','bVI','bIII','bVII'],['i','bVII','bVI','bVII'],['i7','bVIM7','bIIIM7','bVII'],['i','v','bVI','iv'],
@@ -1415,6 +1446,32 @@ const HOUSE_PROG={
     ['i','i','bVI','bVI'],['i','bIII','i','bVII'],['isus2','isus2','bVII','bVII'],['i','i','iv','iv'],
     ['i','bVII','bVI','bVII'],['isus2','bVI','isus2','bVII'],['i','iv','i','bVI'],['i','i','bIII','bVII'],
     ['isus2','iv','bVII','isus2'],['i','bVI','i','bIII']],
+  /* 드리프트 — 두 코드 사이를 아주 느리게 오간다 */
+  drift:[
+    ['i','i','iv','iv'],['isus2','isus2','bVI','bVI'],['i','bIII','i','bVII'],
+    ['isus2','iv','isus2','bVII'],['i','i','bVI','bVII'],['iM7','iM7','IVM7','IVM7'],
+    ['i9','i9','iv9','iv9'],['isus2','bVII','isus2','bVI']],
+  /* 2스텝 — 도리안 7화음이 빠르게 돈다 */
+  twostep:[
+    ['i7','bVIIM7','IVM7','i7'],['i9','iv7','bVIIM7','i9'],['i7','v7','IVM7','iv7'],
+    ['ii7','v7','i7','bVIIM7'],['i9','IVM7','i9','v7'],['i7','iv9','bIIIM7','bVIIM7'],
+    ['isus2','bVII','iv','i'],['i7','bVIM7','bVIIM7','i7'],['i9','ii7','bVIIM7','IVM7'],
+    ['i7','IVM7','v7','i7']],
+  /* 덥 테크노 — 화음을 거의 안 바꾼다. 프리기안의 bII 가 색을 낸다 */
+  dubtechno:[
+    ['i','i','i','i'],['i','i','bII','i'],['isus2','isus2','isus2','bVII'],
+    ['i','i','iv','i'],['i9','i9','i9','bVIM7'],['i','bII','i','i'],
+    ['isus2','isus2','bVI','bVI'],['i7','i7','iv7','i7']],
+  /* 피아노 독주 — 삼분손익에서 3도는 21.5센트 높아 지속되면 거칠다.
+     그래서 sus2, sus4, 9 처럼 2도와 4도와 5도로 짜인 화음을 고른다.
+     이 음정들은 전부 3^k/2^m 계열이라 정확히 포개진다. */
+  piano:[
+    ['isus2','ivsus2','bVIIsus2','isus2'],['isus2','bVI','bVII','isus2'],
+    ['i9','ivsus2','bIIIM7','bVIIsus2'],['isus4','isus2','ivsus4','ivsus2'],
+    ['isus2','bVIIsus2','bVI','v'],['i9','iv9','bVIIsus2','i9'],
+    ['isus2','bIII','ivsus2','bVII'],['isus2','v','ivsus2','isus2'],
+    ['i9','bVIM7','bVIIsus2','i9'],['isus4','bVIIsus2','ivsus2','isus2'],
+    ['isus2','ii','ivsus2','bVIIsus2'],['i9','ivsus4','bIIIM7','i9']],
   /* 다운템포 — 7화음 중심으로 느리게 움직인다 */
   downtempo:[
     ['i7','IVM7','i7','v7'],['i9','iv7','bVIIM7','IVM7'],['i7','bVIIM7','IVM7','i7'],['ii7','v7','i9','IVM7'],
@@ -1433,9 +1490,22 @@ const HOUSE_GENRE={
     form:[['Intro',8],['Verse',16],['Build',8],['Drop',16],['Break',16],['Drop',16],['Outro',8]]},
   downtempo:{name:'Downtempo',tempo:[88,96],mode:'dorian',duck:0.15,
     grid:GRID_DOWN,bass:'lazy',lead:'rhodes',
-    form:[['Intro',8],['Verse',8],['Drop',16],['Break',8],['Verse',8],['Drop',16],['Outro',8]]}
+    form:[['Intro',8],['Verse',8],['Drop',16],['Break',8],['Verse',8],['Drop',16],['Outro',8]]},
+  drift:{name:'Drift',tempo:[60,72],mode:'aeolian',duck:0,
+    grid:GRID_NONE,bass:'none',lead:'rhodes',sect:SECT_DRIFT,swing:0,breakFill:'none',
+    form:[['Intro',8],['Verse',16],['Drop',16],['Break',8],['Verse',16],['Drop',16],['Outro',8]]},
+  twostep:{name:'2-Step',tempo:[130,138],mode:'dorian',duck:0.42,
+    grid:GRID_2STEP,bass:'garage',lead:'pluck',swing:0.34,
+    form:[['Intro',8],['Verse',8],['Build',8],['Drop',16],['Break',8],['Build',8],['Drop',16],['Outro',8]]},
+  piano:{name:'Piano',tempo:[64,78],mode:'aeolian',duck:0,
+    grid:GRID_NONE,bass:'none',lead:'piano',sect:SECT_PIANO,swing:0.12,breakFill:'none',
+    form:[['Intro',8],['Verse',16],['Build',8],['Drop',16],['Break',8],['Verse',16],['Drop',16],['Outro',8]]},
+  dubtechno:{name:'Dub Techno',tempo:[118,124],mode:'phrygian',duck:0.3,
+    grid:GRID_DUB,bass:'sub',lead:'stab',sect:SECT_DUB,swing:0,breakFill:'dub',
+    form:[['Intro',16],['Verse',16],['Drop',16],['Break',16],['Verse',16],['Drop',16],['Outro',16]]}
 };
-const MODE_IV={aeolian:[0,2,3,5,7,8,10],dorian:[0,2,3,5,7,9,10]};
+/* 삼분손익에서 단2도는 256/243 으로 평균율보다 좁다. 프리기안의 bII 가 오히려 잘 맞는다 */
+const MODE_IV={aeolian:[0,2,3,5,7,8,10],dorian:[0,2,3,5,7,9,10],phrygian:[0,1,3,5,7,8,10]};
 /* 플럭 모티프 — 곡마다 하나를 뽑아 끝까지 유지한다. 코드가 바뀌어도 윤곽은 그대로 (하우스 시그니처) */
 const MOTIFS=[
   {steps:[2,6,10,14],       seq:[0,1,2,1]},
@@ -1522,7 +1592,7 @@ function leadVoices(pcs,prev,lo,hi){
   });
   return out;
 }
-const M={on:false,beat:true,bass:true,mel:true,gid:null,bpm:0,prog:null,form:null,grid:null,bassMode:'roll',leadMode:'pluck',padPrev:null,rhoPrev:null,melBase:null,melLast:null,melBasePrev:null,
+const M={on:false,beat:true,bass:true,mel:true,gid:null,bpm:0,prog:null,form:null,grid:null,bassMode:'roll',leadMode:'pluck',sect:null,swing:0,breakFill:'house',padPrev:null,rhoPrev:null,melBase:null,melLast:null,melBasePrev:null,
   step:0,timer:null,nextT:0,g:null,depth:0.5,mode:'aeolian',tonic:0};
 function buildMusicGraph(){
   const ac=ctx();
@@ -1542,11 +1612,21 @@ function buildMusicGraph(){
   musicG.connect(shelf);shelf.connect(tilt);tilt.connect(sat);sat.connect(glue);glue.connect(makeup);
   makeup.connect(dry);makeup.connect(send);send.connect(reverb);
 
+  /* 피드백 딜레이 — 덥 계열의 스탭이 이 버스로만 간다 */
+  const dly=ac.createDelay(2.0);
+  const fb=ac.createGain();
+  const dlyLP=ac.createBiquadFilter();dlyLP.type='lowpass';dlyLP.frequency.value=2200;dlyLP.Q.value=0.6;
+  const dlyHP=ac.createBiquadFilter();dlyHP.type='highpass';dlyHP.frequency.value=260;
+  const dlyIn=ac.createGain();dlyIn.gain.value=1;
+  const dlyOut=ac.createGain();dlyOut.gain.value=0.42;
+  dly.delayTime.value=0.4;fb.gain.value=0.52;
+  dlyIn.connect(dly);dly.connect(dlyHP);dlyHP.connect(dlyLP);dlyLP.connect(fb);fb.connect(dly);
+  dlyLP.connect(dlyOut);dlyOut.connect(musicG);
   const duckG=ac.createGain();duckG.gain.value=1;duckG.connect(musicG);
   const beatG=ac.createGain();beatG.gain.value=M.beat?1:0.0001;beatG.connect(musicG);
   const bassG=ac.createGain();bassG.gain.value=M.bass?1:0.0001;bassG.connect(duckG);
   const melG=ac.createGain();melG.gain.value=M.mel?1:0.0001;melG.connect(duckG);
-  return {musicG,duckG,beatG,bassG,melG};
+  return {musicG,duckG,beatG,bassG,melG,dly,dlyIn,fb};
 }
 /* 공유 노이즈 버퍼를 늘 0번 샘플부터 재생하면 모든 타격이 같은 파형이 된다.
    시작점만 흩어도 스펙트럼은 그대로인 채 반복감이 사라진다. */
@@ -1615,7 +1695,7 @@ function hPerc(t){
 }
 function hBass(t,midi,dur,vel){
   const ac=ctx(),g=M.g.bassG,v=vel==null?1:vel;
-  const sub=M.bassMode!=='roll';
+  const sub=(M.bassMode!=='roll'&&M.bassMode!=='garage');
   const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=sub?1.2:2.4;
   lp.frequency.setValueAtTime(sub?260:430,t);
   lp.frequency.exponentialRampToValueAtTime(sub?110:150,t+dur*0.85);
@@ -1719,6 +1799,72 @@ function hRevCym(t,dur){
   a.gain.setValueAtTime(0.0001,t+dur);
   n.connect(hp);hp.connect(a);a.connect(g);n.start(t);n.stop(t+dur+0.02);
 }
+/* 덥 스탭 — 짧은 화음 한 방을 딜레이로 던진다. 원음은 작고 잔향이 곡을 끌고 간다 */
+function hStab(t,midis,rootM){
+  const ac=ctx(),g=M.g.melG,d=M.g.dlyIn;
+  /* 딜레이는 템포에 붙는다. 점8분(0.75박)이 덥의 기본 자리다 */
+  M.g.dly.delayTime.setTargetAtTime(60/M.bpm*0.75,t,0.05);
+  const lp=ac.createBiquadFilter();lp.type='lowpass';
+  lp.frequency.setValueAtTime(2400,t);lp.frequency.exponentialRampToValueAtTime(700,t+0.22);
+  lp.Q.value=3;
+  const a=ac.createGain();
+  a.gain.setValueAtTime(0.0001,t);
+  a.gain.exponentialRampToValueAtTime(0.16,t+0.008);
+  a.gain.exponentialRampToValueAtTime(0.0001,t+0.26);
+  lp.connect(a);
+  const dryG=ac.createGain();dryG.gain.value=0.58;
+  a.connect(dryG);dryG.connect(g);a.connect(d);
+  midis.forEach((m,k)=>{
+    const o=ac.createOscillator(),og=ac.createGain();
+    o.type=k?'triangle':'sawtooth';
+    o.frequency.value=f2mT(m,rootM);o.detune.value=k%2?5:-5;
+    og.gain.value=k?0.24:0.3;
+    o.connect(og);og.connect(lp);o.start(t);o.stop(t+0.32);
+  });
+}
+/* 피아노 — 때린 현.
+   (1) 해머가 닿는 3ms 짜리 둔탁한 잡음
+   (2) 부분음 여덟. 현은 뻣뻣해서 배음이 위로 갈수록 벌어진다.
+       f(n) = n·f0·sqrt(1 + B·n²). B 는 저음일수록 크다.
+   (3) 한 음에 현이 둘. 0.7센트만 어긋나 두 현이 아주 느리게 맥놀이한다.
+       이 흔들림이 없으면 오르간처럼 들린다.
+   (4) 세기가 커질수록 위 부분음이 살아나고 해머 잡음도 커진다. */
+function piano(t,midi,v,dist,tone){
+  const ac=ctx(),f=f2m(midi),tn=tone==null?0.5:tone;
+  const vv=Math.max(0.12,Math.min(1,v||0.5));
+  const out=noteOut(vv*0.85,dist==null?0.28:dist,0.8);
+  const lp=ac.createBiquadFilter();lp.type='lowpass';
+  lp.frequency.value=1400+vv*3200+tn*1800;lp.Q.value=0.4;
+  lp.connect(out);
+  /* 해머 */
+  const nb=ac.createBufferSource();nb.buffer=noiseBuf();
+  const bp=ac.createBiquadFilter();bp.type='bandpass';
+  bp.frequency.value=f*(5+tn*3);bp.Q.value=0.8;
+  const ng=ac.createGain();
+  ng.gain.setValueAtTime(0.0001,t);
+  ng.gain.exponentialRampToValueAtTime(0.035*vv*vv,t+0.001);
+  ng.gain.exponentialRampToValueAtTime(0.0001,t+0.018);
+  nb.connect(bp);bp.connect(ng);ng.connect(lp);nb.start(t,noiseAt());nb.stop(t+0.04);
+  /* 부분음 */
+  const B=0.0004*Math.pow(2,(52-midi)/22);         /* 저음일수록 뻣뻣하다 */
+  const base=1.7*Math.pow(2,(58-midi)/15);          /* 기음 감쇠. 저음이 훨씬 길다 */
+  const N=Math.min(8,3+Math.round(vv*5));
+  for(let k=1;k<=N;k++){
+    const fr=k*f*Math.sqrt(1+B*k*k);
+    if(fr>11000)break;
+    const amp=(0.5/Math.pow(k,1.35))*(k===1?1:(0.45+vv*0.75));
+    const dec=Math.max(0.10,base/Math.pow(k,0.62));
+    /* 아래 넷만 현 둘, 위는 하나. 한 음에 스물 넘게 쓰면 화음이 겹칠 때 부담이 크다 */
+    (k<=4?[-0.35,0.35]:[0]).forEach(ct=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type='sine';o.frequency.value=fr;o.detune.value=ct;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(amp*0.5*vv,t+0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+dec);
+      o.connect(g);g.connect(lp);o.start(t);o.stop(t+dec+0.05);
+    });
+  }
+}
 function hPad(t,midis,dur,rootM){
   const ac=ctx(),g=M.g.melG;
   const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1800;lp.Q.value=0.4;
@@ -1756,6 +1902,7 @@ function rollTrack(keepTempo){
   if(!keepTempo)M.bpm=G.tempo[0]+Math.round(Math.random()*(G.tempo[1]-G.tempo[0]));
   M.mode=G.mode;M.depth=G.duck;M.form=G.form;
   M.grid=G.grid||HOUSE_GRID;M.bassMode=G.bass;M.leadMode=G.lead;
+  M.sect=G.sect||null;M.swing=G.swing||0;M.breakFill=G.breakFill||'house';
   const pool=HOUSE_PROG[M.gid];
   const pi=(Math.random()*pool.length)|0;
   M.prog=pool[pi];
@@ -1772,7 +1919,7 @@ function scheduleStep(step,t){
   if(step>0&&step%(musicBars()*16)===0){rollTrack(false);note('The set turns over. '+HOUSE_GENRE[M.gid].name+', '+M.bpm+' bpm.');}
   const bar=Math.floor(step/16)%musicBars(), st=step%16;
   const si=sectionAt(bar);
-  const sec=SECT[si.name]||SECT.Drop;
+  const sec=(M.sect&&M.sect[si.name])||SECT[si.name]||SECT.Drop;
   const prog=(si.name==='Break'&&M.progB)?M.progB:M.prog;
   const tones=chordTones(prog[bar%prog.length],M.mode);
   const rootPc=M.tonic+tones[0];
@@ -1794,7 +1941,7 @@ function scheduleStep(step,t){
   /* 베이스 — 멜로딕 하우스는 16분 롤링, 딥하우스는 오프비트 서브만 */
   if(sec.bass){
     /* 근음을 좁은 창 안에서 가장 가까운 옥타브에 놓는다. 코드마다 옥타브가 튀면 저역이 흩어진다 */
-    const bm=M.bassMode==='roll'?nearestTo(rootPc,41,36,47):nearestTo(rootPc,38,33,44);
+    const bm=(M.bassMode==='roll'||M.bassMode==='garage')?nearestTo(rootPc,41,36,47):nearestTo(rootPc,38,33,44);
     if(M.bassMode==='roll'){
       /* 오프비트 8분 뒤에 16분 고스트가 붙어 굴러간다. 매 마디 끝은 5도로 밀어 준다 */
       const ROLL={2:1,3:0.52,6:1,7:0.52,10:1,11:0.52,14:1,15:0.6};
@@ -1804,6 +1951,16 @@ function scheduleStep(step,t){
         const fifth=(st===15&&sec.lead>=0.8);
         const fm=fifth?(bm+7>47?bm-5:bm+7):bm;
         hBass(t,fm,s16*(acc>0.9?1.02:0.88),acc);
+        if(M.bass)wbump(t,barForMidi(bm),0.55*acc+0.35,5);
+      }
+    } else if(M.bassMode==='none'){
+      /* 비트 없는 구성은 저역을 드론에 맡긴다 */
+    } else if(M.bassMode==='garage'){
+      /* 2스텝 — 킥을 피해 당겨 놓은 싱코페이션 서브 */
+      const GA={2:1,7:0.85,10:1,13:0.8,15:0.6};
+      const acc=GA[st];
+      if(acc){
+        hBass(t,bm,s16*(acc>0.9?1.9:1.2),acc);
         if(M.bass)wbump(t,barForMidi(bm),0.55*acc+0.35,5);
       }
     } else if(M.bassMode==='lazy'){
@@ -1857,6 +2014,48 @@ function scheduleStep(step,t){
         hPluck(t,m,pv,60+M.tonic+tones[0]);
         if(M.mel)wbump(t,barForMidi(m),0.55+pv*0.35,3);
       }
+    } else if(M.leadMode==='piano'){
+      /* 왼손 — 화음을 아래에서 위로 흩어 놓는다. 페달이 걸린 것처럼 감쇠가 겹친다.
+         근음은 마디 머리, 나머지는 셋잇단 느낌으로 뒤에 붙는다 */
+      const LH={0:0,3:1,6:2,8:0,11:1,14:2};
+      if(LH[st]!==undefined&&(st===0||Math.random()<0.45+sec.lead*0.45)){
+        const deg=LH[st];
+        const iv=tones[Math.min(deg,tones.length-1)];
+        let m=36+M.tonic+iv;
+        while(m<33)m+=12; while(m>57)m-=12;
+        piano(t,m,(st===0?0.5:0.30)+Math.random()*0.08,0.34,0.4);
+      }
+      /* 오른손 — 모티프를 그대로 쓰되 성글게. 한 프레이즈에 서너 음 */
+      const mo=M.motif, pos=mo.steps.indexOf(st);
+      if(pos>=0&&Math.random()<sec.lead*0.72){
+        const pool=melPool(tones,M.mode);
+        const ivs=mo.seq.map(d=>poolAt(pool,d));
+        if(pos===0||M.melBase==null){
+          const lo=Math.min.apply(null,ivs), hi=Math.max.apply(null,ivs);
+          const ref=(M.melLast==null?68:M.melLast);
+          let best=null,bs=1e9;
+          for(let bb=48;bb<=84;bb+=12){
+            const base=bb+M.tonic;
+            if(base+lo<57||base+hi>86)continue;
+            const sc2=Math.abs(base+ivs[0]-ref)+Math.abs(base+(lo+hi)/2-70);
+            if(sc2<bs){bs=sc2;best=base;}
+          }
+          M.melBase=best!=null?best:60+M.tonic;
+        }
+        let m=M.melBase+ivs[pos%ivs.length];
+        while(m>86)m-=12; while(m<57)m+=12;
+        M.melLast=m;
+        /* 프레이즈 안에서 첫 음을 세우고 뒤는 물린다. 한 세기로 치면 기계가 된다 */
+        const shape=(pos===0?1.18:0.74+Math.random()*0.26);
+        piano(t,m,Math.min(1,(0.30+sec.lead*0.30)*shape+Math.random()*0.06),0.24,0.5+sec.lead*0.18);
+      }
+    } else if(M.leadMode==='stab'){
+      /* 덥 — 뒷박에만, 그것도 가끔. 나머지는 딜레이가 채운다 */
+      if([2,6,10,14].includes(st)&&Math.random()<sec.lead*0.55){
+        const ms=leadVoices(tones.slice(0,3).map(iv=>M.tonic+iv),M.rhoPrev,52,74);
+        M.rhoPrev=ms;
+        hStab(t,ms,60+M.tonic+tones[0]);
+      }
     } else if([2,10].includes(st)&&Math.random()<sec.lead+0.2){
       const ms=leadVoices(tones.slice(0,4).map(iv=>M.tonic+iv),M.rhoPrev,52,76);
       M.rhoPrev=ms;
@@ -1864,13 +2063,17 @@ function scheduleStep(step,t){
       if(M.mel)ms.forEach(m=>wbump(t,barForMidi(m),0.5,3));
     }
   }
-  /* Break — 드럼과 베이스가 빠진 16마디를 셰이커·서브 지속음·라이저·역심벌로 채운다 */
-  if(si.name==='Break'){
-    if(st%2===1)hShaker(t,st%4===3?1:0.62);
+  /* Break 채우기는 장르가 정한다.
+     none 이면 타악이 하나도 안 들어간다. 비트 없는 구성이 Break 에서만
+     셰이커와 라이저를 뒤집어쓰고 있었다.
+     dub 은 서브 지속음만 남긴다. 나머지는 딜레이가 채운다. */
+  if(si.name==='Break'&&M.breakFill!=='none'){
+    const full=(M.breakFill!=='dub');
+    if(full&&st%2===1)hShaker(t,st%4===3?1:0.62);
     if(st===0){
       hSubHold(t,nearestTo(rootPc,38,33,44),spb*4*0.98);
-      if(si.into===si.len-4)hRiser(t,spb*4*4);
-      if(si.into===si.len-1)hRevCym(t,spb*4);
+      if(full&&si.into===si.len-4)hRiser(t,spb*4*4);
+      if(full&&si.into===si.len-1)hRevCym(t,spb*4);
     }
   }
   /* 패드 — 마디 머리 */
@@ -1889,8 +2092,11 @@ function musicPump(){
     const skip=Math.ceil((ac.currentTime-M.nextT)/s16);
     M.nextT+=skip*s16;M.step+=skip;
   }
+  /* 스윙 — 홀수 16분만 뒤로 민다. 그리드 자체(M.nextT)는 정박을 유지해야
+     누적 오차가 생기지 않는다. 미는 값은 재생 시각에만 더한다. */
+  const sw=(M.swing||0)*s16*0.5;
   while(M.nextT<ac.currentTime+0.6){
-    if(M.nextT>ac.currentTime-0.05)scheduleStep(M.step,M.nextT);
+    if(M.nextT>ac.currentTime-0.05)scheduleStep(M.step,M.nextT+((M.step%2)?sw:0));
     M.nextT+=s16;M.step++;
   }
 }
