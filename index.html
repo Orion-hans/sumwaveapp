@@ -1592,7 +1592,7 @@ function leadVoices(pcs,prev,lo,hi){
   });
   return out;
 }
-const M={on:false,beat:true,bass:true,mel:true,gid:null,bpm:0,prog:null,form:null,grid:null,bassMode:'roll',leadMode:'pluck',sect:null,swing:0,breakFill:'house',padPrev:null,rhoPrev:null,melBase:null,melLast:null,melBasePrev:null,
+const M={on:false,beat:true,bass:true,mel:true,gid:null,bpm:0,prog:null,form:null,grid:null,bassMode:'roll',leadMode:'pluck',sect:null,swing:0,breakFill:'house',padPrev:null,rhoPrev:null,melBase:null,melLast:null,melBasePrev:null,lhVo:null,
   step:0,timer:null,nextT:0,g:null,depth:0.5,mode:'aeolian',tonic:0};
 function buildMusicGraph(){
   const ac=ctx();
@@ -1823,44 +1823,54 @@ function hStab(t,midis,rootM){
   });
 }
 /* 피아노 — 때린 현.
-   (1) 해머가 닿는 3ms 짜리 둔탁한 잡음
-   (2) 부분음 여덟. 현은 뻣뻣해서 배음이 위로 갈수록 벌어진다.
-       f(n) = n·f0·sqrt(1 + B·n²). B 는 저음일수록 크다.
-   (3) 한 음에 현이 둘. 0.7센트만 어긋나 두 현이 아주 느리게 맥놀이한다.
-       이 흔들림이 없으면 오르간처럼 들린다.
-   (4) 세기가 커질수록 위 부분음이 살아나고 해머 잡음도 커진다. */
+   (1) 해머 — 펠트가 닿는 둔탁한 소리. 대역을 낮게 잡아야 피아노고, 높으면 하프시코드가 된다
+   (2) 부분음 여덟. 현이 뻣뻣해 배음이 위로 갈수록 벌어진다. f(n)=n·f0·√(1+B·n²)
+   (3) 이중 감쇠. 실제 피아노는 처음 0.2초쯤 빠르게 떨어졌다가 그 뒤로 아주 길게 남는다.
+       한 번의 지수 감쇠로 만들면 오르간이나 벨처럼 들린다. 이게 가장 큰 차이다
+   (4) 향판 — 통 울림을 흉내낸 고정 공명 셋. 음높이와 무관하게 늘 같은 자리에서 울린다
+   (5) 한 음에 현 둘, 0.7센트 차이. 위 부분음은 하나만 써서 부하를 줄인다 */
 function piano(t,midi,v,dist,tone){
   const ac=ctx(),f=f2m(midi),tn=tone==null?0.5:tone;
   const vv=Math.max(0.12,Math.min(1,v||0.5));
-  const out=noteOut(vv*0.85,dist==null?0.28:dist,0.8);
+  const out=noteOut(vv*0.9,dist==null?0.28:dist,0.8);
+  /* 향판 공명 */
+  const b1=ac.createBiquadFilter();b1.type='peaking';b1.frequency.value=132;b1.Q.value=1.1;b1.gain.value=4;
+  const b2=ac.createBiquadFilter();b2.type='peaking';b2.frequency.value=430;b2.Q.value=1.4;b2.gain.value=3;
+  const b3=ac.createBiquadFilter();b3.type='peaking';b3.frequency.value=1700;b3.Q.value=0.9;b3.gain.value=2.5;
   const lp=ac.createBiquadFilter();lp.type='lowpass';
-  lp.frequency.value=1400+vv*3200+tn*1800;lp.Q.value=0.4;
-  lp.connect(out);
-  /* 해머 */
+  lp.frequency.value=1300+vv*vv*4200+tn*1600;lp.Q.value=0.4;
+  lp.connect(b1);b1.connect(b2);b2.connect(b3);b3.connect(out);
+  /* 해머 — 펠트. 낮고 짧게 */
   const nb=ac.createBufferSource();nb.buffer=noiseBuf();
-  const bp=ac.createBiquadFilter();bp.type='bandpass';
-  bp.frequency.value=f*(5+tn*3);bp.Q.value=0.8;
+  const hb=ac.createBiquadFilter();hb.type='bandpass';
+  hb.frequency.value=Math.min(1800,f*2.2+180);hb.Q.value=0.55;
   const ng=ac.createGain();
   ng.gain.setValueAtTime(0.0001,t);
-  ng.gain.exponentialRampToValueAtTime(0.035*vv*vv,t+0.001);
-  ng.gain.exponentialRampToValueAtTime(0.0001,t+0.018);
-  nb.connect(bp);bp.connect(ng);ng.connect(lp);nb.start(t,noiseAt());nb.stop(t+0.04);
+  ng.gain.exponentialRampToValueAtTime(0.075*vv*vv,t+0.0012);
+  ng.gain.exponentialRampToValueAtTime(0.0001,t+0.026);
+  nb.connect(hb);hb.connect(ng);ng.connect(lp);nb.start(t,noiseAt());nb.stop(t+0.05);
   /* 부분음 */
-  const B=0.0004*Math.pow(2,(52-midi)/22);         /* 저음일수록 뻣뻣하다 */
-  const base=1.7*Math.pow(2,(58-midi)/15);          /* 기음 감쇠. 저음이 훨씬 길다 */
+  const B=0.0004*Math.pow(2,(52-midi)/22);
+  const base=4.2*Math.pow(2,(58-midi)/20);          /* 여음. 고음이 너무 빨리 죽지 않게 기울기를 눕혔다 */
   const N=Math.min(8,3+Math.round(vv*5));
   for(let k=1;k<=N;k++){
     const fr=k*f*Math.sqrt(1+B*k*k);
     if(fr>11000)break;
-    const amp=(0.5/Math.pow(k,1.35))*(k===1?1:(0.45+vv*0.75));
-    const dec=Math.max(0.10,base/Math.pow(k,0.62));
-    /* 아래 넷만 현 둘, 위는 하나. 한 음에 스물 넘게 쓰면 화음이 겹칠 때 부담이 크다 */
+    const amp=(0.5/Math.pow(k,1.18))*(k===1?1:(0.42+vv*0.8));
+    const dec=Math.max(0.12,base/Math.pow(k,0.85));   /* 위 부분음이 먼저 사라진다 */
+    /* 1단은 짧고 가파르게(현 사이 에너지 교환), 2단은 길고 완만하게(여음).
+       실제 피아노의 초기 감쇠는 20dB/s 안팎, 여음은 4dB/s 안팎이다 */
+    const knee=Math.min(0.35,dec*0.09)*(1+0.25*Math.min(k,4));
+    const sus=0.15+0.05*Math.min(k,3);
+    const atk=0.0015+0.0008*k;
     (k<=4?[-0.35,0.35]:[0]).forEach(ct=>{
       const o=ac.createOscillator(),g=ac.createGain();
       o.type='sine';o.frequency.value=fr;o.detune.value=ct;
+      const A=amp*0.5*vv;
       g.gain.setValueAtTime(0.0001,t);
-      g.gain.exponentialRampToValueAtTime(amp*0.5*vv,t+0.004);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+dec);
+      g.gain.exponentialRampToValueAtTime(A,t+atk);
+      g.gain.exponentialRampToValueAtTime(A*sus,t+atk+knee);   /* 1단 */
+      g.gain.exponentialRampToValueAtTime(0.0001,t+dec);        /* 2단 */
       o.connect(g);g.connect(lp);o.start(t);o.stop(t+dec+0.05);
     });
   }
@@ -2015,39 +2025,56 @@ function scheduleStep(step,t){
         if(M.mel)wbump(t,barForMidi(m),0.55+pv*0.35,3);
       }
     } else if(M.leadMode==='piano'){
-      /* 왼손 — 화음을 아래에서 위로 흩어 놓는다. 페달이 걸린 것처럼 감쇠가 겹친다.
-         근음은 마디 머리, 나머지는 셋잇단 느낌으로 뒤에 붙는다 */
-      const LH={0:0,3:1,6:2,8:0,11:1,14:2};
-      if(LH[st]!==undefined&&(st===0||Math.random()<0.45+sec.lead*0.45)){
-        const deg=LH[st];
-        const iv=tones[Math.min(deg,tones.length-1)];
-        let m=36+M.tonic+iv;
-        while(m<33)m+=12; while(m>57)m-=12;
-        piano(t,m,(st===0?0.5:0.30)+Math.random()*0.08,0.34,0.4);
+      /* 왼손과 오른손을 따로 굴리면 두 악기가 각자 노는 소리가 난다.
+         네 마디를 한 프레이즈로 묶고, 오른손이 노래하는 마디와 쉬는 마디를 정한다.
+         왼손은 무작위가 아니라 고정 음형이고, 오른손이 쉬는 마디에만 답한다. */
+      const ph=Math.floor(bar)%4;
+      /* 여덟 마디마다 쉬는 자리를 옮긴다. 네 마디가 그대로 반복되면 금방 지겨워진다 */
+      const SING=(Math.floor(bar/4)%2)?[1,0,1,1]:[1,1,0,1];
+      const sing=(SING[ph]===1)&&(sec.lead>=0.5);
+
+      /* 왼손 — 마디 머리에 근음, 그 위로 흩어 놓기. 화음이 바뀌는 마디는 근음을 더 깊게 */
+      /* 왼손 보이싱을 마디 머리에서 한 번 쌓는다.
+         음마다 음역에 접어 넣으면 2도가 3도보다 위로 가는 식으로 순서가 뒤집혀
+         아르페지오가 지그재그가 된다. 낮은 근음 하나 위에 나머지를 오름차순으로 올린다. */
+      if(st===0){
+        let r0=36+M.tonic+tones[0];
+        while(r0<33)r0+=12; while(r0>48)r0-=12;
+        const up=tones.slice(1,3).map(iv=>r0+12+((((iv-tones[0])%12)+12)%12)).sort((a,b)=>a-b);
+        M.lhVo=[r0].concat(up);
       }
-      /* 오른손 — 모티프를 그대로 쓰되 성글게. 한 프레이즈에 서너 음 */
-      const mo=M.motif, pos=mo.steps.indexOf(st);
-      if(pos>=0&&Math.random()<sec.lead*0.72){
-        const pool=melPool(tones,M.mode);
-        const ivs=mo.seq.map(d=>poolAt(pool,d));
-        if(pos===0||M.melBase==null){
-          const lo=Math.min.apply(null,ivs), hi=Math.max.apply(null,ivs);
-          const ref=(M.melLast==null?68:M.melLast);
-          let best=null,bs=1e9;
-          for(let bb=48;bb<=84;bb+=12){
-            const base=bb+M.tonic;
-            if(base+lo<57||base+hi>86)continue;
-            const sc2=Math.abs(base+ivs[0]-ref)+Math.abs(base+(lo+hi)/2-70);
-            if(sc2<bs){bs=sc2;best=base;}
+      const VO=M.lhVo||[36,48,55];
+      /* 노래하는 마디는 셋만, 쉬는 마디는 여섯을 채워 오른손에 답한다 */
+      const LH=sing?{0:0,6:1,11:2}:{0:0,3:1,6:2,8:1,11:2,14:1};
+      if(LH[st]!==undefined){
+        const m=VO[Math.min(LH[st],VO.length-1)];
+        const vel=(st===0?0.52:0.30)+(sing?0:0.08)+Math.random()*0.06;
+        piano(t,m,vel,0.34,0.36+(sing?0:0.08));
+      }
+      /* 오른손 — 노래하는 마디에만. 프레이즈 첫 음을 세우고 뒤를 물린다 */
+      if(sing){
+        const mo=M.motif, pos=mo.steps.indexOf(st);
+        if(pos>=0){
+          const pool=melPool(tones,M.mode);
+          const ivs=mo.seq.map(d=>poolAt(pool,d));
+          if(pos===0||M.melBase==null){
+            const lo=Math.min.apply(null,ivs), hi=Math.max.apply(null,ivs);
+            const ref=(M.melLast==null?67:M.melLast);
+            let best=null,bs=1e9;
+            for(let bb=48;bb<=84;bb+=12){
+              const base2=bb+M.tonic;
+              if(base2+lo<60||base2+hi>86)continue;
+              const sc2=Math.abs(base2+ivs[0]-ref)+Math.abs(base2+(lo+hi)/2-71);
+              if(sc2<bs){bs=sc2;best=base2;}
+            }
+            M.melBase=best!=null?best:60+M.tonic;
           }
-          M.melBase=best!=null?best:60+M.tonic;
+          let m=M.melBase+ivs[pos%ivs.length];
+          while(m>86)m-=12; while(m<60)m+=12;
+          M.melLast=m;
+          const shape=(pos===0?1.16:0.76+Math.random()*0.24);
+          piano(t,m,Math.min(1,(0.30+sec.lead*0.28)*shape+Math.random()*0.05),0.24,0.5+sec.lead*0.18);
         }
-        let m=M.melBase+ivs[pos%ivs.length];
-        while(m>86)m-=12; while(m<57)m+=12;
-        M.melLast=m;
-        /* 프레이즈 안에서 첫 음을 세우고 뒤는 물린다. 한 세기로 치면 기계가 된다 */
-        const shape=(pos===0?1.18:0.74+Math.random()*0.26);
-        piano(t,m,Math.min(1,(0.30+sec.lead*0.30)*shape+Math.random()*0.06),0.24,0.5+sec.lead*0.18);
       }
     } else if(M.leadMode==='stab'){
       /* 덥 — 뒷박에만, 그것도 가끔. 나머지는 딜레이가 채운다 */
